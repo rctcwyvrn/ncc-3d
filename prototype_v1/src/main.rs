@@ -1,10 +1,14 @@
 use std::{collections::HashMap, fs};
 
 use eyre::Result;
-use tri_mesh::{MeshBuilder, prelude::Mesh, prelude::{Vector3, VertexID}};
+use tri_mesh::{
+    prelude::Mesh,
+    prelude::{Vector3, VertexID},
+    MeshBuilder,
+};
 
-mod laplacian;
 mod chemistry;
+mod laplacian;
 
 const TS: f64 = 0.01;
 
@@ -29,36 +33,42 @@ fn main() -> Result<()> {
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
 
     let mut conc_data = HashMap::new();
-    mesh.vertex_iter()
-        .for_each(|v_id| {
-            let data = VertexData { conc_a: STARTING_A, conc_b: STARTING_B};
-            conc_data.insert(v_id, data);
-        });
+    mesh.vertex_iter().for_each(|v_id| {
+        let data = VertexData {
+            conc_a: STARTING_A,
+            conc_b: STARTING_B,
+        };
+        conc_data.insert(v_id, data);
+    });
 
     println!("Loaded mesh from {} with vertices: ", mesh_filename);
-    for v_id in  mesh.vertex_iter() {
+    for v_id in mesh.vertex_iter() {
         let dat = conc_data[&v_id];
-        println!("{}: {:?} ({}, {})", v_id, mesh.vertex_position(v_id), dat.conc_a, dat.conc_b);
+        println!(
+            "{}: {:?} ({}, {})",
+            v_id,
+            mesh.vertex_position(v_id),
+            dat.conc_a,
+            dat.conc_b
+        );
     }
     println!("Num edges = {}", mesh.no_edges());
 
     let stim_str = fs::read_to_string(stim_filename)?;
     let stimulation: Vec<_> = stim_str
         .lines()
-        .map(|s| {
-            // let parts: Vec<&str> = s.split(" ").collect();
-            // let v_idx = 
-            // let stim = str::parse::<f64>(parts[1]).unwrap();
-            str::parse::<f64>(s).unwrap()
-        })
+        .map(|s| str::parse::<f64>(s).unwrap())
         .collect();
-    println!("Using stimulation data from {} | {:?}", stim_filename, stimulation);
+    println!(
+        "Using stimulation data from {} | {:?}",
+        stim_filename, stimulation
+    );
 
     simulate(mesh, conc_data, stimulation);
     Ok(())
 }
 
-/// Print the data out 
+/// Print the data out
 fn do_print(mut data: Vec<(f64, Vector3<f64>)>) -> f64 {
     data.sort_by(|(_, p1), (_, p2)| p1.x.partial_cmp(&p2.x).unwrap());
     let mut line_0 = "      ".to_string();
@@ -98,18 +108,22 @@ fn do_print(mut data: Vec<(f64, Vector3<f64>)>) -> f64 {
 
 fn print_conc_data(mesh: &Mesh, conc_data: &HashMap<VertexID, VertexData>) {
     println!("-------------------------");
-    let a_data: Vec<_> = conc_data.iter().map(|(id, x)| (x.conc_a, mesh.vertex_position(*id))).collect();
+    let a_data: Vec<_> = conc_data
+        .iter()
+        .map(|(id, x)| (x.conc_a, mesh.vertex_position(*id)))
+        .collect();
     let total_a = do_print(a_data);
 
-    let b_data: Vec<_> = conc_data.iter().map(|(id, x)| (x.conc_b, mesh.vertex_position(*id))).collect();
+    let b_data: Vec<_> = conc_data
+        .iter()
+        .map(|(id, x)| (x.conc_b, mesh.vertex_position(*id)))
+        .collect();
     let total_b = do_print(b_data);
-
 
     println!("Total conc of A: {}", total_a);
     println!("Total conc of B: {}", total_b);
     println!("System total = {}", total_a + total_b);
     println!("-------------------------");
-
 }
 
 fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulation: Vec<f64>) {
@@ -120,8 +134,14 @@ fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulatio
         }
 
         // Compute diffusion laplacians
-        let conc_a_data = conc_data.iter().map(|(id, dat)| (*id, dat.conc_a)).collect();
-        let conc_b_data = conc_data.iter().map(|(id, dat)| (*id, dat.conc_b)).collect();
+        let conc_a_data = conc_data
+            .iter()
+            .map(|(id, dat)| (*id, dat.conc_a))
+            .collect();
+        let conc_b_data = conc_data
+            .iter()
+            .map(|(id, dat)| (*id, dat.conc_b))
+            .collect();
         let lapl_a = laplacian::compute_laplacian(&mesh, &conc_a_data);
         let lapl_b = laplacian::compute_laplacian(&mesh, &conc_b_data);
 
@@ -142,7 +162,13 @@ fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulatio
         for v_id in mesh.vertex_iter() {
             let dat = conc_data.get_mut(&v_id).unwrap();
             if (i % 10) == 0 {
-                println!("DEBUG: ({},{}) {} | {}", dat.conc_a, dat.conc_b, D_A * lapl_a[&v_id], rate_activ[&v_id]);
+                println!(
+                    "DEBUG: ({},{}) {} | {}",
+                    dat.conc_a,
+                    dat.conc_b,
+                    D_A * lapl_a[&v_id],
+                    rate_activ[&v_id]
+                );
             }
             dat.conc_a += TS * (D_A * lapl_a[&v_id] + rate_activ[&v_id]);
             dat.conc_b += TS * (D_B * lapl_b[&v_id] - rate_activ[&v_id]);

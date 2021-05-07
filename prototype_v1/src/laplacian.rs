@@ -4,13 +4,11 @@ use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
 
 // use crate::VertexData;
 
-
 // Fixme: What should thsi be set to? Need to read the paper more carefully
 const H: f64 = 1.0;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
 pub fn compute_laplacian(mesh: &Mesh, f: &HashMap<VertexID, f64>) -> HashMap<VertexID, f64> {
-    
     let mut lapl = HashMap::new();
     for v_id in mesh.vertex_iter() {
         // Compute laplacian for this v_id according to formula 2.1
@@ -29,7 +27,7 @@ pub fn compute_laplacian(mesh: &Mesh, f: &HashMap<VertexID, f64>) -> HashMap<Ver
             sum_face += compute_pair(mesh, f, v_id, vert_ids.1);
             sum_face += compute_pair(mesh, f, v_id, vert_ids.2);
 
-            total_sum += sum_face * area / num_t 
+            total_sum += sum_face * area / num_t
         }
         lapl.insert(v_id, total_sum / (4.0 * std::f64::consts::PI * H.powi(2)));
     }
@@ -42,5 +40,5 @@ fn compute_pair(mesh: &Mesh, f: &HashMap<VertexID, f64>, v_id: VertexID, ov_id: 
     let ov = mesh.vertex_position(ov_id);
     let dist: f64 = (ov - v).magnitude2();
 
-    (-dist/(4.0*H)).exp() * (f[&ov_id] - f[&v_id])
+    (-dist / (4.0 * H)).exp() * (f[&ov_id] - f[&v_id])
 }
