@@ -8,7 +8,7 @@ mod chemistry;
 
 const TS: f64 = 0.01;
 
-const STARTING_B: f64 = 0.25;
+const STARTING_B: f64 = 2.0;
 const D_A: f64 = 0.1;
 const D_B: f64 = 10.0;
 
@@ -95,6 +95,7 @@ fn print_conc_data(mesh: &Mesh, conc_data: &HashMap<VertexID, VertexData>) {
 
     println!("Total conc of A: {}", total_a);
     println!("Total conc of B: {}", total_b);
+    println!("System total = {}", total_a + total_b);
     println!("-------------------------");
 
 }
