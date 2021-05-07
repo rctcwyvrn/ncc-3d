@@ -8,7 +8,10 @@ mod chemistry;
 
 const TS: f64 = 0.01;
 
+// Steady state pair of A,B
+const STARTING_A: f64 = 0.268;
 const STARTING_B: f64 = 2.0;
+
 const D_A: f64 = 0.1;
 const D_B: f64 = 10.0;
 
@@ -19,30 +22,39 @@ pub struct VertexData {
 }
 
 fn main() -> Result<()> {
-    let obj_source = fs::read_to_string("mesh.obj")?;
+    let mesh_filename = "mesh.obj";
+    let stim_filename = "stim_gradient.dat";
+
+    let obj_source = fs::read_to_string(mesh_filename)?;
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
-    let conc_str = fs::read_to_string("initial_conc.dat")?;
-    let concs: Vec<_> = conc_str
-        .lines()
-        .map(|s| str::parse::<f64>(s).unwrap())
-        .collect();
 
     let mut conc_data = HashMap::new();
     mesh.vertex_iter()
-        .zip(concs.iter())
-        .for_each(|(v_id, conc_a)| {
-            let data = VertexData { conc_a: *conc_a, conc_b: STARTING_B};
+        .for_each(|v_id| {
+            let data = VertexData { conc_a: STARTING_A, conc_b: STARTING_B};
             conc_data.insert(v_id, data);
         });
 
-    println!("Loaded mesh with vertices: ");
+    println!("Loaded mesh from {} with vertices: ", mesh_filename);
     for v_id in  mesh.vertex_iter() {
         let dat = conc_data[&v_id];
         println!("{}: {:?} ({}, {})", v_id, mesh.vertex_position(v_id), dat.conc_a, dat.conc_b);
     }
     println!("Num edges = {}", mesh.no_edges());
 
-    simulate(mesh, conc_data);
+    let stim_str = fs::read_to_string(stim_filename)?;
+    let stimulation: Vec<_> = stim_str
+        .lines()
+        .map(|s| {
+            // let parts: Vec<&str> = s.split(" ").collect();
+            // let v_idx = 
+            // let stim = str::parse::<f64>(parts[1]).unwrap();
+            str::parse::<f64>(s).unwrap()
+        })
+        .collect();
+    println!("Using stimulation data from {} | {:?}", stim_filename, stimulation);
+
+    simulate(mesh, conc_data, stimulation);
     Ok(())
 }
 
@@ -100,10 +112,7 @@ fn print_conc_data(mesh: &Mesh, conc_data: &HashMap<VertexID, VertexData>) {
 
 }
 
-fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>) {
-    // println!("Initial conc data:");
-    // print_conc_data(&mesh, &conc_data);
-
+fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulation: Vec<f64>) {
     for i in 0..(100.0 / TS).round() as usize {
         if (i % 10) == 0 {
             println!("T = {}", (i as f64) * TS);
@@ -116,8 +125,19 @@ fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>) {
         let lapl_a = laplacian::compute_laplacian(&mesh, &conc_a_data);
         let lapl_b = laplacian::compute_laplacian(&mesh, &conc_b_data);
 
-        // Compute reaction derivatives
-        let rate_activ = chemistry::compute_reaction_rate(&conc_data);
+        // Compute reaction rate
+        let mut rate_activ = chemistry::compute_reaction_rate(&conc_data);
+
+        if i == 9 {
+            // Give input stimulation
+            println!("Applying input stimulation");
+            for (v_id, stim_k) in mesh.vertex_iter().zip(stimulation.iter()) {
+                let dat = conc_data[&v_id];
+                let b = dat.conc_b;
+                let r = rate_activ.get_mut(&v_id).unwrap();
+                *r += stim_k * b;
+            }
+        }
 
         for v_id in mesh.vertex_iter() {
             let dat = conc_data.get_mut(&v_id).unwrap();
