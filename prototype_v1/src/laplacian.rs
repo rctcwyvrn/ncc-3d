@@ -5,6 +5,7 @@ use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
 // use crate::VertexData;
 
 
+// Fixme: What should thsi be set to? Need to read the paper more carefully
 const H: f64 = 1.0;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
