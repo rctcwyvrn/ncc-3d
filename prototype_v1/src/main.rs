@@ -15,12 +15,14 @@ mod plotting;
 mod stim;
 
 const TS: f64 = 0.01;
-const FINAL_TIME: f64 = 200.0;
+const FINAL_TIME: f64 = 100.0;
+const SNAPSHOT_PERIOD: usize = 1000;
 
 // Steady state pair of A,B
 const STARTING_A: f64 = 0.2683312;
 const STARTING_B: f64 = 2.0;
 
+// Diffusivity constants
 const D_A: f64 = 0.1;
 const D_B: f64 = 10.0;
 
@@ -58,7 +60,7 @@ fn main() -> Result<()> {
 fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn: StimFn) {
     let mut t: f64 = 0.0;
     for i in 0..(FINAL_TIME / TS).round() as usize {
-        if (i % 1000) == 0 {
+        if (i % SNAPSHOT_PERIOD) == 0 {
             // Periodic plots
             plot_data(mesh, conc_data, GraphTy::Intermediate(t.round()));
         }
@@ -78,6 +80,9 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
         // Compute reaction rate
         let rate_activ = chemistry::compute_reaction_rate(&conc_data);
 
+        // Debugging: to see if total concentration is still not conserved
+        let mut total_a = 0.0;
+        let mut total_b = 0.0;
         for v_id in mesh.vertex_iter() {
             let pos = mesh.vertex_position(v_id);
             let stim_k = stim_fn(pos, t);
@@ -86,7 +91,7 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
 
             let dat = conc_data.get_mut(&v_id).unwrap();
             let r = rate_activ[&v_id];
-            if (i % 1000) == 0 {
+            if (i % SNAPSHOT_PERIOD) == 0 {
                 let pos = mesh.vertex_position(v_id);
                 println!(
                     "DEBUG: ({},{},{}) ({},{}) {} | {} | {}",
@@ -99,10 +104,18 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
                     D_B * lapl_b[&v_id],
                     r,
                 );
+                total_a += dat.conc_a;
+                total_b += dat.conc_b;
             }
 
             dat.conc_a += TS * (D_A * lapl_a[&v_id] + (r + stim_k * b));
             dat.conc_b += TS * (D_B * lapl_b[&v_id] - (r + stim_k * b));
+        }
+
+        if (i % SNAPSHOT_PERIOD) == 0 {
+            println!("Total active = {}", total_a);
+            println!("Total inactive = {}", total_b);
+            println!("Full total = {}", total_a + total_b);
         }
         t += TS;
     }
