@@ -1,0 +1,3 @@
+[submodule "prototype_v1/tri-mesh"]
+	path = prototype_v1/tri-mesh
+	url = git@github.com:rctcwyvrn/tri-mesh.git
