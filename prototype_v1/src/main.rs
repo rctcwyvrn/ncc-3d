@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fs};
 
 use eyre::Result;
+use plotting::{plot_data, GraphTy};
 use tri_mesh::{
     prelude::Mesh,
     prelude::{Vector3, VertexID},
@@ -9,8 +10,11 @@ use tri_mesh::{
 
 mod chemistry;
 mod laplacian;
+mod plotting;
 
 const TS: f64 = 0.01;
+const FINAL_TIME: f64 = 70.0;
+const STIM_STEP: usize = 10;
 
 // Steady state pair of A,B
 const STARTING_A: f64 = 0.268;
@@ -64,36 +68,40 @@ fn main() -> Result<()> {
         stim_filename, stimulation
     );
 
-    simulate(mesh, conc_data, stimulation);
+    plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
+    simulate(&mesh, &mut conc_data, stimulation);
+    plot_data(&mesh, &conc_data, GraphTy::Final);
+
     Ok(())
 }
 
 /// Print the data out
 fn do_print(mut data: Vec<(f64, Vector3<f64>)>) -> f64 {
+    let space = "        ";
     data.sort_by(|(_, p1), (_, p2)| p1.x.partial_cmp(&p2.x).unwrap());
-    let mut line_0 = "      ".to_string();
+    let mut line_0 = space.to_string();
     let mut line_1 = String::new();
-    let mut line_2 = "      ".to_string();
+    let mut line_2 = space.to_string();
     let mut total = 0.0;
     for (x, pos) in data.iter() {
         let mut s = (*x.to_string()).to_string();
-        s.truncate(4);
+        s.truncate(6);
 
         if pos.y > 0.0 {
             line_0 += "(";
             line_0 += &s;
             line_0 += ")";
-            line_0 += "      ";
+            line_0 += space;
         } else if pos.y < 0.0 {
             line_2 += "(";
             line_2 += &s;
             line_2 += ")";
-            line_2 += "      ";
+            line_2 += space;
         } else {
             line_1 += "(";
             line_1 += &s;
             line_1 += ")";
-            line_1 += "      ";
+            line_1 += space;
         }
         total += *x;
     }
@@ -126,11 +134,20 @@ fn print_conc_data(mesh: &Mesh, conc_data: &HashMap<VertexID, VertexData>) {
     println!("-------------------------");
 }
 
-fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulation: Vec<f64>) {
-    for i in 0..(100.0 / TS).round() as usize {
+fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stimulation: Vec<f64>) {
+    for i in 0..(FINAL_TIME / TS).round() as usize {
         if (i % 10) == 0 {
             println!("T = {}", (i as f64) * TS);
-            print_conc_data(&mesh, &conc_data);
+            print_conc_data(mesh, &conc_data);
+        }
+
+        if i == STIM_STEP + 1 {
+            // Right after stimulation
+            plot_data(mesh, conc_data, GraphTy::Intermediate(i as f64 * TS));
+        }
+        if (i % 1000) == 0 {
+            // Periodic plots
+            plot_data(mesh, conc_data, GraphTy::Intermediate(i as f64 * TS));
         }
 
         // Compute diffusion laplacians
@@ -142,13 +159,13 @@ fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulatio
             .iter()
             .map(|(id, dat)| (*id, dat.conc_b))
             .collect();
-        let lapl_a = laplacian::compute_laplacian(&mesh, &conc_a_data);
-        let lapl_b = laplacian::compute_laplacian(&mesh, &conc_b_data);
+        let lapl_a = laplacian::compute_laplacian(mesh, &conc_a_data);
+        let lapl_b = laplacian::compute_laplacian(mesh, &conc_b_data);
 
         // Compute reaction rate
         let mut rate_activ = chemistry::compute_reaction_rate(&conc_data);
 
-        if i == 9 {
+        if i == STIM_STEP {
             // Give input stimulation
             println!("Applying input stimulation");
             for (v_id, stim_k) in mesh.vertex_iter().zip(stimulation.iter()) {
@@ -163,10 +180,11 @@ fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulatio
             let dat = conc_data.get_mut(&v_id).unwrap();
             if (i % 10) == 0 {
                 println!(
-                    "DEBUG: ({},{}) {} | {}",
+                    "DEBUG: ({},{}) {} | {} | {}",
                     dat.conc_a,
                     dat.conc_b,
                     D_A * lapl_a[&v_id],
+                    D_B * lapl_b[&v_id],
                     rate_activ[&v_id]
                 );
             }
@@ -176,5 +194,5 @@ fn simulate(mesh: Mesh, mut conc_data: HashMap<VertexID, VertexData>, stimulatio
     }
 
     println!("Final conc data:");
-    print_conc_data(&mesh, &conc_data);
+    print_conc_data(mesh, &conc_data);
 }

@@ -10,7 +10,7 @@ x_pos = 0.5 * L
 y_pos = L * math.sqrt(3)/2
 i = 0
 
-for _ in range(3):
+for _ in range(7):
     """
     i - 2        i + 1
             i           i + 3
@@ -35,6 +35,7 @@ for _ in range(3):
     x_pos += L
 
 print(f"Num verts = {len(positions)}")
+print(f"max x = {x_pos - 0.5 * L}")
 # positions = []
 # positions.append((0.0,0.0,0.0))
 # positions.append((x_pos, y_pos, 0.0))
