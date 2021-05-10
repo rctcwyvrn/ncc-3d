@@ -5,6 +5,9 @@ use tri_mesh::prelude::{Mesh, VertexID};
 
 use crate::VertexData;
 
+// Remember to change the stim function as well if this ever changes
+const MAX_X: f64 = 10.0;
+
 #[derive(Debug)]
 pub enum GraphTy {
     Intermediate(f64),
@@ -71,8 +74,17 @@ fn do_plot(
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
         .caption(title, ("sans-serif", 40))
-        .build_cartesian_3d(0.0..7.0, 0.0..3.0, -1.0..1.0)
+        .build_cartesian_3d(0.0..MAX_X, 0.0..3.0, -10.0..10.0)
         .unwrap();
+
+    //DEBUG: Top down look
+    // chart.with_projection(|mut pb| {
+    //     pb.pitch = std::f64::consts::FRAC_PI_2;
+    //     pb.yaw = 0.0;
+    //     pb.scale = 1.0;
+    //     pb.into_matrix()
+    // });
+
     chart.configure_axes().draw().unwrap();
 
     chart
@@ -99,7 +111,7 @@ fn do_plot(
                     };
 
                     Polygon::new(
-                        vec![(p1.x, y1, p1.y), (p2.x, y2, p2.y), (p3.x, y3, p3.y)],
+                        vec![(p1.x, y1, p1.z), (p2.x, y2, p2.z), (p3.x, y3, p3.z)],
                         &style.mix(0.3),
                     )
                 }),
@@ -110,12 +122,11 @@ fn do_plot(
         let (v1_id, v2_id) = mesh.edge_vertices(e_id);
         let (v1, v2) = (mesh.vertex_position(v1_id), mesh.vertex_position(v2_id));
 
-        // I laid my mesh on the x,y plane, but to grpah nicely it should be on the x,z plane, so this is a bit scuffed
         let (y1, y2) = match ty {
             GraphConcTy::Active => (conc_data[&v1_id].conc_a, conc_data[&v2_id].conc_a),
             GraphConcTy::Inactive => (conc_data[&v1_id].conc_b, conc_data[&v2_id].conc_b),
         };
-        let line: [(f64, f64, f64); 2] = [(v1.x, y1, v1.y), (v2.x, y2, v2.y)];
+        let line: [(f64, f64, f64); 2] = [(v1.x, y1, v1.z), (v2.x, y2, v2.z)];
         chart
             .draw_series(LineSeries::new(
                 line.iter().map(|(x, y, z)| (*x, *y, *z)),
