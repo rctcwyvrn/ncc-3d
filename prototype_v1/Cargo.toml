@@ -10,3 +10,6 @@ edition = "2018"
 tri-mesh = "0.5.0"
 eyre = "0.6.5"
 plotters = "0.3.0"
+
+[profile.release]
+debug = true
