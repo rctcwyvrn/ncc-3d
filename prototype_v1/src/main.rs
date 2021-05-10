@@ -15,7 +15,7 @@ mod plotting;
 mod stim;
 
 const TS: f64 = 0.01;
-const FINAL_TIME: f64 = 100.0;
+const FINAL_TIME: f64 = 200.0;
 
 // Steady state pair of A,B
 const STARTING_A: f64 = 0.2683312;
@@ -61,12 +61,6 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
         if (i % 1000) == 0 {
             // Periodic plots
             plot_data(mesh, conc_data, GraphTy::Intermediate(t.round()));
-
-            // for v_id in mesh.vertex_iter() {
-            //     let pos = mesh.vertex_position(v_id);
-            //     let dat = conc_data[&v_id];
-            //     println!("({},{},{}) {} | {}", pos.x, pos.y, pos.z, dat.conc_a, dat.conc_b);
-            // }
         }
 
         // Compute diffusion laplacians
@@ -82,20 +76,16 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
         let lapl_b = laplacian::compute_laplacian(mesh, &conc_b_data);
 
         // Compute reaction rate
-        let mut rate_activ = chemistry::compute_reaction_rate(&conc_data);
+        let rate_activ = chemistry::compute_reaction_rate(&conc_data);
 
-        // Give input stimulation
         for v_id in mesh.vertex_iter() {
             let pos = mesh.vertex_position(v_id);
             let stim_k = stim_fn(pos, t);
             let dat = conc_data[&v_id];
             let b = dat.conc_b;
-            let r = rate_activ.get_mut(&v_id).unwrap();
-            *r += stim_k * b;
-        }
 
-        for v_id in mesh.vertex_iter() {
             let dat = conc_data.get_mut(&v_id).unwrap();
+            let r = rate_activ[&v_id];
             if (i % 1000) == 0 {
                 let pos = mesh.vertex_position(v_id);
                 println!(
@@ -107,11 +97,12 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
                     dat.conc_b,
                     D_A * lapl_a[&v_id],
                     D_B * lapl_b[&v_id],
-                    rate_activ[&v_id]
+                    r,
                 );
             }
-            dat.conc_a += TS * (D_A * lapl_a[&v_id] + rate_activ[&v_id]);
-            dat.conc_b += TS * (D_B * lapl_b[&v_id] - rate_activ[&v_id]);
+
+            dat.conc_a += TS * (D_A * lapl_a[&v_id] + (r + stim_k * b));
+            dat.conc_b += TS * (D_B * lapl_b[&v_id] - (r + stim_k * b));
         }
         t += TS;
     }
