@@ -1,8 +1,9 @@
-use std::{collections::HashMap, fs};
+use std::fs;
 
 use eyre::Result;
 use plotting::{plot_data, GraphTy};
 use stim::{StimFn, StimTy};
+use storage::VecStore;
 use tri_mesh::{
     prelude::Mesh,
     prelude::VertexID,
@@ -13,6 +14,7 @@ mod chemistry;
 mod laplacian;
 mod plotting;
 mod stim;
+mod storage;
 
 const TS: f64 = 0.01;
 const FINAL_TIME: f64 = 100.0;
@@ -38,13 +40,13 @@ fn main() -> Result<()> {
     let obj_source = fs::read_to_string(mesh_filename)?;
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
 
-    let mut conc_data = HashMap::new();
+    let mut conc_data = VecStore::new(mesh.no_vertices());
     mesh.vertex_iter().for_each(|v_id| {
         let data = VertexData {
             conc_a: STARTING_A,
             conc_b: STARTING_B,
         };
-        conc_data.insert(v_id, data);
+        conc_data.set(v_id, data);
     });
 
     let stim_fn = stim::get_stim(StimTy::Gradient);
@@ -57,7 +59,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn: StimFn) {
+fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) {
     let mut t: f64 = 0.0;
     for i in 0..(FINAL_TIME / TS).round() as usize {
         if (i % SNAPSHOT_PERIOD) == 0 {
@@ -66,19 +68,19 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
         }
 
         // Compute diffusion laplacians
-        let conc_a_data = conc_data
-            .iter()
-            .map(|(id, dat)| (*id, dat.conc_a))
-            .collect();
-        let conc_b_data = conc_data
-            .iter()
-            .map(|(id, dat)| (*id, dat.conc_b))
-            .collect();
+        let mut conc_a_data = VecStore::new(mesh.no_vertices());
+        let mut conc_b_data = VecStore::new(mesh.no_vertices());
+
+        for v_id in mesh.vertex_iter() {
+            conc_a_data.set(v_id, conc_data.get(v_id).conc_a);
+            conc_b_data.set(v_id, conc_data.get(v_id).conc_b);
+        }
+
         let lapl_a = laplacian::compute_laplacian(mesh, &conc_a_data);
         let lapl_b = laplacian::compute_laplacian(mesh, &conc_b_data);
 
         // Compute reaction rate
-        let rate_activ = chemistry::compute_reaction_rate(&conc_data);
+        let rate_activ = chemistry::compute_reaction_rate(mesh, &conc_data);
 
         // Debugging: to see if total concentration is still not conserved
         let mut total_a = 0.0;
@@ -86,11 +88,11 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
         for v_id in mesh.vertex_iter() {
             let pos = mesh.vertex_position(v_id);
             let stim_k = stim_fn(pos, t);
-            let dat = conc_data[&v_id];
+            let dat = conc_data.get(v_id);
             let b = dat.conc_b;
 
-            let dat = conc_data.get_mut(&v_id).unwrap();
-            let r = rate_activ[&v_id];
+            let dat = conc_data.get_mut(v_id);
+            let r = rate_activ.get(v_id);
             if (i % SNAPSHOT_PERIOD) == 0 {
                 let pos = mesh.vertex_position(v_id);
                 println!(
@@ -100,16 +102,16 @@ fn simulate(mesh: &Mesh, conc_data: &mut HashMap<VertexID, VertexData>, stim_fn:
                     pos.z,
                     dat.conc_a,
                     dat.conc_b,
-                    D_A * lapl_a[&v_id],
-                    D_B * lapl_b[&v_id],
+                    D_A * lapl_a.get(v_id),
+                    D_B * lapl_b.get(v_id),
                     r,
                 );
                 total_a += dat.conc_a;
                 total_b += dat.conc_b;
             }
 
-            dat.conc_a += TS * (D_A * lapl_a[&v_id] + (r + stim_k * b));
-            dat.conc_b += TS * (D_B * lapl_b[&v_id] - (r + stim_k * b));
+            dat.conc_a += TS * (D_A * lapl_a.get(v_id) + (r + stim_k * b));
+            dat.conc_b += TS * (D_B * lapl_b.get(v_id) - (r + stim_k * b));
         }
 
         if (i % SNAPSHOT_PERIOD) == 0 {

@@ -1,14 +1,20 @@
-use std::collections::HashMap;
+use tri_mesh::prelude::{Deref, InnerSpace, Mesh, VertexID};
 
-use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
+use crate::storage::VecStore;
 
 // Fixme: What should thsi be set to? Need to read the paper more carefully
 const H: f64 = 1.0;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
-pub fn compute_laplacian(mesh: &Mesh, f: &HashMap<VertexID, f64>) -> HashMap<VertexID, f64> {
-    let mut lapl = HashMap::new();
-    let mut memo = HashMap::new();
+pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
+    let n = mesh.no_vertices();
+    let mut lapl = VecStore::new(n);
+    let mut memo = VecStore::new(n);
+
+    for i in 0..n {
+        // Use inner vec directly because we have usizes instead of VertexIDs
+        memo.0[i] = Some(VecStore::new(n));
+    }
 
     for v_id in mesh.vertex_iter() {
         // Compute laplacian for this v_id according to formula 2.1
@@ -29,25 +35,32 @@ pub fn compute_laplacian(mesh: &Mesh, f: &HashMap<VertexID, f64>) -> HashMap<Ver
 
             total_sum += sum_face * area / num_t
         }
-        lapl.insert(v_id, total_sum / (4.0 * std::f64::consts::PI * H.powi(2)));
+        lapl.set(v_id, total_sum / (4.0 * std::f64::consts::PI * H.powi(2)));
     }
 
     lapl
 }
 
-fn compute_pair(mesh: &Mesh, f: &HashMap<VertexID, f64>, memo: &mut HashMap<(VertexID, VertexID), f64>, v_id: VertexID, ov_id: VertexID) -> f64 {
+fn check_memo(memo: &VecStore<VecStore<f64>>, v_id: VertexID, ov_id: VertexID) -> bool {
+    if !memo.is_set(v_id) {
+        return false
+    }
+    let inner = memo.get(v_id);
 
-    if memo.contains_key(&(v_id, ov_id)) {
-        memo[&(v_id, ov_id)]
+    inner.is_set(ov_id)
+}
+
+fn compute_pair(mesh: &Mesh, f: &VecStore<f64>, memo: &mut VecStore<VecStore<f64>>, v_id: VertexID, ov_id: VertexID) -> f64 {
+    if check_memo(memo, v_id, ov_id) {
+        *memo.get(v_id).get(ov_id)
     } else {
         let v = mesh.vertex_position(v_id);
         let ov = mesh.vertex_position(ov_id);
         let dist: f64 = (ov - v).magnitude2();
     
-        let val = (-dist / (4.0 * H)).exp() * (f[&ov_id] - f[&v_id]);        
-        memo.insert((v_id, ov_id), val);
-        memo.insert((ov_id, v_id), -val);
-
+        let val = (-dist / (4.0 * H)).exp() * (f.get(ov_id) - f.get(v_id));        
+        memo.get_mut(v_id).set(ov_id, val);
+        memo.get_mut(ov_id).set(v_id, -val);
         val
     }
 }

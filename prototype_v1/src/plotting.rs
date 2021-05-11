@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
 use plotters::prelude::*;
 use tri_mesh::prelude::{Mesh, VertexID};
 
-use crate::VertexData;
+use crate::{VertexData, storage::VecStore};
 
 // Remember to change the stim function as well if this ever changes
 const MAX_X: f64 = 10.0;
@@ -14,7 +12,7 @@ pub enum GraphTy {
     Final,
 }
 
-pub fn plot_data(mesh: &Mesh, conc_data: &HashMap<VertexID, VertexData>, ty: GraphTy) {
+pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     println!("Starting to plot {:?}", ty);
     let title_active = match ty {
         GraphTy::Intermediate(ts) => format!("Active conc. at t = {}", ts),
@@ -58,7 +56,7 @@ enum GraphConcTy {
 
 fn do_plot(
     mesh: &Mesh,
-    conc_data: &HashMap<VertexID, VertexData>,
+    conc_data: &VecStore<VertexData>,
     title: &str,
     path: &str,
     ty: GraphConcTy,
@@ -99,14 +97,14 @@ fn do_plot(
                     );
                     let (y1, y2, y3) = match ty {
                         GraphConcTy::Active => (
-                            conc_data[&v1].conc_a,
-                            conc_data[&v2].conc_a,
-                            conc_data[&v3].conc_a,
+                            conc_data.get(v1).conc_a,
+                            conc_data.get(v2).conc_a,
+                            conc_data.get(v3).conc_a,
                         ),
                         GraphConcTy::Inactive => (
-                            conc_data[&v1].conc_b,
-                            conc_data[&v2].conc_b,
-                            conc_data[&v3].conc_b,
+                            conc_data.get(v1).conc_b,
+                            conc_data.get(v2).conc_b,
+                            conc_data.get(v3).conc_b,
                         ),
                     };
 
@@ -123,8 +121,8 @@ fn do_plot(
         let (v1, v2) = (mesh.vertex_position(v1_id), mesh.vertex_position(v2_id));
 
         let (y1, y2) = match ty {
-            GraphConcTy::Active => (conc_data[&v1_id].conc_a, conc_data[&v2_id].conc_a),
-            GraphConcTy::Inactive => (conc_data[&v1_id].conc_b, conc_data[&v2_id].conc_b),
+            GraphConcTy::Active => (conc_data.get(v1_id).conc_a, conc_data.get(v2_id).conc_a),
+            GraphConcTy::Inactive => (conc_data.get(v1_id).conc_b, conc_data.get(v2_id).conc_b),
         };
         let line: [(f64, f64, f64); 2] = [(v1.x, y1, v1.z), (v2.x, y2, v2.z)];
         chart
