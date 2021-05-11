@@ -13,7 +13,8 @@ mod stim;
 mod storage;
 
 const TS: f64 = 0.01;
-const FINAL_TIME: f64 = 100.0;
+const FINAL_TIME: f64 = 100.0; // Full convergence of 2D surface
+// const FINAL_TIME: f64 = 470.0; // Full convergence of icosahedron
 const SNAPSHOT_PERIOD: usize = 1000;
 
 // Steady state pair of A,B

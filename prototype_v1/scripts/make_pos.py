@@ -1,7 +1,8 @@
 import math
 
-L = 1
-
+# L = 1
+L = 0.5
+# L = 0.25
 height = 10
 length = 10
 
