@@ -1,4 +1,4 @@
-use tri_mesh::prelude::{Mesh, VertexID};
+use tri_mesh::prelude::Mesh;
 
 use crate::{VertexData, storage::VecStore};
 
@@ -9,7 +9,7 @@ const GAMMA: f64 = 1.0;
 const DELTA: f64 = 1.0;
 
 pub fn compute_reaction_rate(mesh: &Mesh, conc_data: &VecStore<VertexData>) -> VecStore<f64> {
-    let mut rates = VecStore::new(mesh.no_vertices());
+    let mut rates = VecStore::new(&mesh);
     for v_id in mesh.vertex_iter() {
         let dat = conc_data.get(v_id);
         let a = dat.conc_a;

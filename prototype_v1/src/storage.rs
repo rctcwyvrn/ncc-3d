@@ -1,17 +1,23 @@
-use std::ops::{Index, IndexMut};
+use core::fmt::Debug;
 
-use tri_mesh::prelude::{Deref, VertexID};
+use tri_mesh::prelude::{Deref, Mesh, VertexID};
 
 
-/// Chaotic stupid struct
-/// I'll Make it better eventually but for now it is a wrapper around Vec<Option<T>> 
-/// and it fill it up to capacity when initialized
-pub struct VecStore<T>(pub Vec<Option<T>>);
+/// Constant sized Vec indexable by VertexID
+/// 
+/// Provides methods to get, set, and fill the vector with values
+/// Size is constant: should always be the # of verticies in the mesh
+///
+/// In the future, when we have multiple meshes, I probably want some way of
+/// distinguising what v_id comes from which mesh and if it all lines up correctly
+/// (Maybe wrapper structs around mesh and vertexID that has a unique mesh_id or something?)
+#[derive(Debug, Clone)]
+pub struct VecStore<T>(Vec<Option<T>>) where T: Debug + Clone;
 
-impl<T> VecStore<T> {
-    pub fn new(size: usize) -> VecStore<T> {
+impl<T> VecStore<T> where T: Debug + Clone {
+    pub fn new(mesh: &Mesh) -> VecStore<T> {
         let mut v = Vec::new();
-        for _ in 0..size {
+        for _ in 0..mesh.no_vertices() {
             v.push(None)
         }
         VecStore(v)
@@ -43,6 +49,13 @@ impl<T> VecStore<T> {
         match x {
             Some(t) => t,
             None => panic!("VecStore: Tried to get at an index that was not set (try is_set first)"),
+        }
+    }
+
+    /// Fill in the inner vec with the given value
+    pub fn fill_with(&mut self, val: T) {
+        for i in 0..self.0.len() {
+            self.0[i] = Some(val.clone());
         }
     }
 }

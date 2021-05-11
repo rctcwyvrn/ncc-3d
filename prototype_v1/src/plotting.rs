@@ -1,5 +1,5 @@
 use plotters::prelude::*;
-use tri_mesh::prelude::{Mesh, VertexID};
+use tri_mesh::prelude::Mesh;
 
 use crate::{VertexData, storage::VecStore};
 

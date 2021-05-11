@@ -1,4 +1,4 @@
-use tri_mesh::prelude::{Deref, InnerSpace, Mesh, VertexID};
+use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
 
 use crate::storage::VecStore;
 
@@ -7,14 +7,9 @@ const H: f64 = 1.0;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
 pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
-    let n = mesh.no_vertices();
-    let mut lapl = VecStore::new(n);
-    let mut memo = VecStore::new(n);
-
-    for i in 0..n {
-        // Use inner vec directly because we have usizes instead of VertexIDs
-        memo.0[i] = Some(VecStore::new(n));
-    }
+    let mut lapl = VecStore::new(mesh);
+    let mut memo = VecStore::new(mesh);
+    memo.fill_with(VecStore::new(mesh));
 
     for v_id in mesh.vertex_iter() {
         // Compute laplacian for this v_id according to formula 2.1
@@ -58,7 +53,9 @@ fn compute_pair(mesh: &Mesh, f: &VecStore<f64>, memo: &mut VecStore<VecStore<f64
         let ov = mesh.vertex_position(ov_id);
         let dist: f64 = (ov - v).magnitude2();
     
-        let val = (-dist / (4.0 * H)).exp() * (f.get(ov_id) - f.get(v_id));        
+        let val = (-dist / (4.0 * H)).exp() * (f.get(ov_id) - f.get(v_id));
+        // Wait this first one doesn't do anything right, because we never have this combination of v_id and ov_id ever again
+        // So only the second one matters?        
         memo.get_mut(v_id).set(ov_id, val);
         memo.get_mut(ov_id).set(v_id, -val);
         val

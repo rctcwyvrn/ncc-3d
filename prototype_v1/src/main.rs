@@ -6,7 +6,6 @@ use stim::{StimFn, StimTy};
 use storage::VecStore;
 use tri_mesh::{
     prelude::Mesh,
-    prelude::VertexID,
     MeshBuilder,
 };
 
@@ -40,7 +39,7 @@ fn main() -> Result<()> {
     let obj_source = fs::read_to_string(mesh_filename)?;
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
 
-    let mut conc_data = VecStore::new(mesh.no_vertices());
+    let mut conc_data = VecStore::new(&mesh);
     mesh.vertex_iter().for_each(|v_id| {
         let data = VertexData {
             conc_a: STARTING_A,
@@ -68,8 +67,8 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         }
 
         // Compute diffusion laplacians
-        let mut conc_a_data = VecStore::new(mesh.no_vertices());
-        let mut conc_b_data = VecStore::new(mesh.no_vertices());
+        let mut conc_a_data = VecStore::new(&mesh);
+        let mut conc_b_data = VecStore::new(&mesh);
 
         for v_id in mesh.vertex_iter() {
             conc_a_data.set(v_id, conc_data.get(v_id).conc_a);
