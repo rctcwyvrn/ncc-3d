@@ -2,9 +2,8 @@ use core::fmt::Debug;
 
 use tri_mesh::prelude::{Deref, Mesh, VertexID};
 
-
 /// Constant sized Vec indexable by VertexID
-/// 
+///
 /// Provides methods to get, set, and fill the vector with values
 /// Size is constant: should always be the # of verticies in the mesh
 ///
@@ -12,9 +11,14 @@ use tri_mesh::prelude::{Deref, Mesh, VertexID};
 /// distinguising what v_id comes from which mesh and if it all lines up correctly
 /// (Maybe wrapper structs around mesh and vertexID that has a unique mesh_id or something?)
 #[derive(Debug, Clone)]
-pub struct VecStore<T>(Vec<Option<T>>) where T: Debug + Clone;
+pub struct VecStore<T>(Vec<Option<T>>)
+where
+    T: Debug + Clone;
 
-impl<T> VecStore<T> where T: Debug + Clone {
+impl<T> VecStore<T>
+where
+    T: Debug + Clone,
+{
     pub fn new(mesh: &Mesh) -> VecStore<T> {
         let mut v = Vec::new();
         for _ in 0..mesh.no_vertices() {
@@ -40,7 +44,9 @@ impl<T> VecStore<T> where T: Debug + Clone {
         let x = &self.0[v_id.deref() as usize];
         match x {
             Some(t) => t,
-            None => panic!("VecStore: Tried to get at an index that was not set (try is_set first)"),
+            None => {
+                panic!("VecStore: Tried to get at an index that was not set (try is_set first)")
+            }
         }
     }
 
@@ -48,7 +54,9 @@ impl<T> VecStore<T> where T: Debug + Clone {
         let x = &mut self.0[v_id.deref() as usize];
         match x {
             Some(t) => t,
-            None => panic!("VecStore: Tried to get at an index that was not set (try is_set first)"),
+            None => {
+                panic!("VecStore: Tried to get at an index that was not set (try is_set first)")
+            }
         }
     }
 

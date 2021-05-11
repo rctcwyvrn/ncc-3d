@@ -1,6 +1,6 @@
 use tri_mesh::prelude::Mesh;
 
-use crate::{VertexData, storage::VecStore};
+use crate::{storage::VecStore, VertexData};
 
 // Taken from wave-pinning paper
 const K: f64 = 1.0;

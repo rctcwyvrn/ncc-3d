@@ -1,7 +1,7 @@
 use plotters::prelude::*;
 use tri_mesh::prelude::Mesh;
 
-use crate::{VertexData, storage::VecStore};
+use crate::{storage::VecStore, VertexData};
 
 // Remember to change the stim function as well if this ever changes
 const MAX_X: f64 = 10.0;
@@ -64,7 +64,7 @@ fn do_plot(
     let root = BitMapBackend::new(path, (640, 480)).into_drawing_area();
     let style = match ty {
         GraphConcTy::Active => BLUE,
-        GraphConcTy::Inactive => RED, 
+        GraphConcTy::Inactive => RED,
     };
 
     root.fill(&WHITE).unwrap();

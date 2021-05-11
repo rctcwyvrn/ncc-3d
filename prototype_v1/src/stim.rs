@@ -21,11 +21,11 @@ pub enum StimTy {
 pub fn get_stim(ty: StimTy) -> StimFn {
     match ty {
         StimTy::Gradient => {
-            let f = | pos: Vector3<f64>, t | {
+            let f = |pos: Vector3<f64>, t| {
                 let s = if t <= T1_GRAD {
                     S_GRAD
                 } else if t <= T2_GRAD {
-                    S_GRAD * (1.0 - (t - T1_GRAD)/(T2_GRAD - T1_GRAD))
+                    S_GRAD * (1.0 - (t - T1_GRAD) / (T2_GRAD - T1_GRAD))
                 } else {
                     0.0
                 };
@@ -34,7 +34,7 @@ pub fn get_stim(ty: StimTy) -> StimFn {
             Box::new(f)
         }
         StimTy::Localized => {
-            let f = | pos: Vector3<f64>, t: f64 | {
+            let f = |pos: Vector3<f64>, t: f64| {
                 let s = if t <= T1_LOC {
                     S_LOC / 2.0
                 } else if t <= T2_LOC {

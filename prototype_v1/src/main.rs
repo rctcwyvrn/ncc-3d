@@ -4,10 +4,7 @@ use eyre::Result;
 use plotting::{plot_data, GraphTy};
 use stim::{StimFn, StimTy};
 use storage::VecStore;
-use tri_mesh::{
-    prelude::Mesh,
-    MeshBuilder,
-};
+use tri_mesh::{prelude::Mesh, MeshBuilder};
 
 mod chemistry;
 mod laplacian;

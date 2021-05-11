@@ -2,7 +2,9 @@ use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
 
 use crate::storage::VecStore;
 
-// Fixme: What should thsi be set to? Need to read the paper more carefully
+// This constant determines how much farther away verts can affect the current vert
+// Higher h = more effect from farther verts
+// This seems good for now
 const H: f64 = 1.0;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
@@ -38,24 +40,30 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
 
 fn check_memo(memo: &VecStore<VecStore<f64>>, v_id: VertexID, ov_id: VertexID) -> bool {
     if !memo.is_set(v_id) {
-        return false
+        return false;
     }
     let inner = memo.get(v_id);
 
     inner.is_set(ov_id)
 }
 
-fn compute_pair(mesh: &Mesh, f: &VecStore<f64>, memo: &mut VecStore<VecStore<f64>>, v_id: VertexID, ov_id: VertexID) -> f64 {
+fn compute_pair(
+    mesh: &Mesh,
+    f: &VecStore<f64>,
+    memo: &mut VecStore<VecStore<f64>>,
+    v_id: VertexID,
+    ov_id: VertexID,
+) -> f64 {
     if check_memo(memo, v_id, ov_id) {
         *memo.get(v_id).get(ov_id)
     } else {
         let v = mesh.vertex_position(v_id);
         let ov = mesh.vertex_position(ov_id);
         let dist: f64 = (ov - v).magnitude2();
-    
+
         let val = (-dist / (4.0 * H)).exp() * (f.get(ov_id) - f.get(v_id));
         // Wait this first one doesn't do anything right, because we never have this combination of v_id and ov_id ever again
-        // So only the second one matters?        
+        // So only the second one matters?
         memo.get_mut(v_id).set(ov_id, val);
         memo.get_mut(ov_id).set(v_id, -val);
         val
