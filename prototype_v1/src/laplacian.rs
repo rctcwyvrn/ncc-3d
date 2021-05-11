@@ -43,7 +43,6 @@ fn check_memo(memo: &VecStore<VecStore<f64>>, v_id: VertexID, ov_id: VertexID) -
         return false;
     }
     let inner = memo.get(v_id);
-
     inner.is_set(ov_id)
 }
 

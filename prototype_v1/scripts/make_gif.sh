@@ -1,1 +1,1 @@
-convert -delay 40 -loop 1 $1 output.gif
+convert -delay 40 -loop 1 "$@" output.gif
