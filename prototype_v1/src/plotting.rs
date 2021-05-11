@@ -139,36 +139,19 @@ fn do_plot(
                 }),
         )
         .unwrap();
-
-    // for e_id in mesh.edge_iter() {
-    //     let (v1_id, v2_id) = mesh.edge_vertices(e_id);
-    //     let (p1, p2) = (mesh.vertex_position(v1_id), mesh.vertex_position(v2_id));
-
-    //     let (v1, v2) = match ty {
-    //         GraphConcTy::Active => (conc_data.get(v1_id).conc_a, conc_data.get(v2_id).conc_a),
-    //         GraphConcTy::Inactive => (conc_data.get(v1_id).conc_b, conc_data.get(v2_id).conc_b),
-    //     };
-    //     let avg = (v1 + v2)/2.0;
-    //     let color = get_color(avg);
-    //     let line: [(f64, f64, f64); 2] = [(p1.x, p1.y, p1.z), (p2.x, p2.y, p2.z)];
-    //     chart
-    //         .draw_series(LineSeries::new(
-    //             line.iter().map(|(x, y, z)| (*x, *y, *z)),
-    //             &BLACK,
-    //         ))
-    //         .unwrap();
-    // }
-
-    for v_id in mesh.vertex_iter() {
-        let p = mesh.vertex_position(v_id);
-        let v = match ty {
-            GraphConcTy::Active => conc_data.get(v_id).conc_a,
-            GraphConcTy::Inactive => conc_data.get(v_id).conc_b,
-        };
-
-        let color = get_color(v);
-        chart.draw_series(
-            [(p.x, p.y, p.z)].iter().map(|point| Circle::new(*point, 5, &color))
-        ).unwrap();
-    }
+        
+    chart.draw_series(
+        mesh.vertex_iter()
+            .map(|v_id| {
+                let p = mesh.vertex_position(v_id);
+                let v = match ty {
+                    GraphConcTy::Active => conc_data.get(v_id).conc_a,
+                    GraphConcTy::Inactive => conc_data.get(v_id).conc_b,
+                };
+        
+                let color = get_color(v);
+                ((p.x, p.y, p.z), color)
+            })
+            .map(|(point, color)| Circle::new(point, 3, &color))
+    ).unwrap();
 }
