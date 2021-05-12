@@ -22,7 +22,7 @@ pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     };
 
     let path_active = match ty {
-        GraphTy::Intermediate(ts) => format!("images/active-{}.png", ts),
+        GraphTy::Intermediate(ts) => format!("images/active-{:0>4}.png", ts),
         GraphTy::Final => format!("images/active-final.png"),
     };
 
@@ -32,7 +32,7 @@ pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     };
 
     let path_inactive = match ty {
-        GraphTy::Intermediate(ts) => format!("images/inactive-{}.png", ts),
+        GraphTy::Intermediate(ts) => format!("images/inactive-{:0>4}.png", ts),
         GraphTy::Final => format!("images/inactive-final.png"),
     };
     do_plot(
@@ -132,6 +132,7 @@ fn do_plot(
                     };
                     let avg = (v1+v2+v3)/3.0;
                     let color = get_color(avg).mix(0.3);
+                    // let color = get_color(avg).mix(0.7);
                     Polygon::new(
                         vec![(p1.x, p1.y, p1.z), (p2.x, p2.y, p2.z), (p3.x, p3.y, p3.z)],
                         &color,
@@ -139,7 +140,7 @@ fn do_plot(
                 }),
         )
         .unwrap();
-        
+
     chart.draw_series(
         mesh.vertex_iter()
             .map(|v_id| {

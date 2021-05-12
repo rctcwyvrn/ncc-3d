@@ -17,7 +17,7 @@ const TS: f64 = 0.01;
 // const FINAL_TIME: f64 = 470.0; // Full convergence of icosahedron
 const FINAL_TIME: f64 = 120.0; // Convergence of sphere
 
-const SNAPSHOT_PERIOD: usize = 1000;
+const SNAPSHOT_PERIOD: usize = 500;
 
 // Steady state pair of A,B
 const STARTING_A: f64 = 0.2683312;

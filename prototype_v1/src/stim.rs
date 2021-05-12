@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use tri_mesh::prelude::Vector3;
 
-const S_GRAD: f64 = 0.007;
+const S_GRAD: f64 = 0.07;
 const T1_GRAD: f64 = 20.0;
 const T2_GRAD: f64 = 25.0;
 const L_GRAD: f64 = 10.0;
