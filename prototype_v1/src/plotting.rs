@@ -130,7 +130,7 @@ fn do_plot(
                             conc_data.get(v3).conc_b,
                         ),
                     };
-                    let avg = (v1+v2+v3)/3.0;
+                    let avg = (v1 + v2 + v3) / 3.0;
                     let color = get_color(avg).mix(0.3);
                     Polygon::new(
                         vec![(p1.x, p1.y, p1.z), (p2.x, p2.y, p2.z), (p3.x, p3.y, p3.z)],
@@ -139,19 +139,21 @@ fn do_plot(
                 }),
         )
         .unwrap();
-        
-    chart.draw_series(
-        mesh.vertex_iter()
-            .map(|v_id| {
-                let p = mesh.vertex_position(v_id);
-                let v = match ty {
-                    GraphConcTy::Active => conc_data.get(v_id).conc_a,
-                    GraphConcTy::Inactive => conc_data.get(v_id).conc_b,
-                };
-        
-                let color = get_color(v);
-                ((p.x, p.y, p.z), color)
-            })
-            .map(|(point, color)| Circle::new(point, 3, &color))
-    ).unwrap();
+
+    chart
+        .draw_series(
+            mesh.vertex_iter()
+                .map(|v_id| {
+                    let p = mesh.vertex_position(v_id);
+                    let v = match ty {
+                        GraphConcTy::Active => conc_data.get(v_id).conc_a,
+                        GraphConcTy::Inactive => conc_data.get(v_id).conc_b,
+                    };
+
+                    let color = get_color(v);
+                    ((p.x, p.y, p.z), color)
+                })
+                .map(|(point, color)| Circle::new(point, 3, &color)),
+        )
+        .unwrap();
 }
