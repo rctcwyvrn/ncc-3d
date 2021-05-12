@@ -65,10 +65,13 @@ fn get_color(val: f64) -> RGBColor {
         let rel_percent = (percent - 0.5) / 0.25;
         let c = (rel_percent * 255.0) as u8;
         RGBColor(0, 255, c)
-    } else {
+    } else if percent <= 1.0 {
         let rel_percent = (percent - 0.75) / 0.25;
         let c = (rel_percent * 255.0) as u8;
         RGBColor(0, 255 - c, 255)
+    } else {
+        eprintln!("Warning: Got a concentration > 2.0: {}", val);
+        RGBColor(255, 0, 255)
     }
 }
 

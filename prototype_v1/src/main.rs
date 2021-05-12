@@ -48,8 +48,8 @@ fn main() -> Result<()> {
         conc_data.set(v_id, data);
     });
 
-    let stim_fn = stim::get_stim(StimTy::Gradient);
-    // let stim_fn = stim::get_stim(StimTy::Localized);
+    // let stim_fn = stim::get_stim(StimTy::Gradient);
+    let stim_fn = stim::get_stim(StimTy::Localized);
 
     plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
     simulate(&mesh, &mut conc_data, stim_fn);
@@ -84,16 +84,14 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         // Debugging: to see if total concentration is still not conserved
         let mut total_a = 0.0;
         let mut total_b = 0.0;
-        for v_id in mesh.vertex_iter() {
-            let pos = mesh.vertex_position(v_id);
-            let stim_k = stim_fn(pos, t);
-            let dat = conc_data.get(v_id);
-            let b = dat.conc_b;
 
-            let dat = conc_data.get_mut(v_id);
-            let r = rate_activ.get(v_id);
+        // Step each vertex
+        for v_id in mesh.vertex_iter() {
+            // Debug logging
             if (i % SNAPSHOT_PERIOD) == 0 {
                 let pos = mesh.vertex_position(v_id);
+                let dat = conc_data.get(v_id);
+                let r = rate_activ.get(v_id);
                 println!(
                     "DEBUG: ({},{},{}) ({},{}) {} | {} | {}",
                     pos.x,
@@ -108,6 +106,15 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
                 total_a += dat.conc_a;
                 total_b += dat.conc_b;
             }
+
+            // Compute the external stimulation
+            let pos = mesh.vertex_position(v_id);
+            let stim_k = stim_fn(pos, t);
+
+            // Finally collect all the data together and step the diff eq
+            let dat = conc_data.get_mut(v_id);
+            let b = dat.conc_b;
+            let r = rate_activ.get(v_id);
 
             dat.conc_a += TS * (D_A * lapl_a.get(v_id) + (r + stim_k * b));
             dat.conc_b += TS * (D_B * lapl_b.get(v_id) - (r + stim_k * b));
