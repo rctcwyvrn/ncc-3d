@@ -15,7 +15,12 @@ mod storage;
 const TS: f64 = 0.01;
 // const FINAL_TIME: f64 = 100.0; // Full convergence of 2D surface
 // const FINAL_TIME: f64 = 470.0; // Full convergence of icosahedron
-const FINAL_TIME: f64 = 120.0; // Convergence of sphere
+// const FINAL_TIME: f64 = 140.0; // Convergence of sphere
+const FINAL_TIME: f64 = 200.0; // Testing steady_state_tol
+
+// At what point should we stop and assume we've reached a steady state?
+// Completely arbitrary and messy, but it's better than just having a final time and hoping that its enough
+const STEADY_STATE_TOL: f64 = 0.01;
 
 const SNAPSHOT_PERIOD: usize = 500;
 
@@ -85,6 +90,7 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         let mut total_a = 0.0;
         let mut total_b = 0.0;
 
+        let mut d_total = 0.0; // To determine when steady state has been reached
         // Step each vertex
         for v_id in mesh.vertex_iter() {
             // Debug logging
@@ -116,17 +122,30 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
             let b = dat.conc_b;
             let r = rate_activ.get(v_id);
 
-            dat.conc_a += TS * (D_A * lapl_a.get(v_id) + (r + stim_k * b));
-            dat.conc_b += TS * (D_B * lapl_b.get(v_id) - (r + stim_k * b));
+            let d_a =  D_A * lapl_a.get(v_id) + (r + stim_k * b);
+            let d_b = D_B * lapl_b.get(v_id) - (r + stim_k * b);
+
+            dat.conc_a += TS * d_a;
+            dat.conc_b += TS * d_b;
+
+            d_total += d_a.abs() + d_b.abs();
+        }
+
+        if d_total < STEADY_STATE_TOL  {
+            println!("!! Steady state reached: Stopping at t = {}", t);
+            return 
         }
 
         if (i % SNAPSHOT_PERIOD) == 0 {
             println!("Total active = {}", total_a);
             println!("Total inactive = {}", total_b);
             println!("Full total = {}", total_a + total_b);
+            println!("d_total = {}", d_total);
         }
         t += TS;
     }
+
+    println!("Did not reach steady state: Stopping at final time t = {}", t);
 
     // println!("Final conc data:");
     // print_conc_data(mesh, &conc_data);
