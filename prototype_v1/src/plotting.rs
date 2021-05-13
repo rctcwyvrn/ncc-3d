@@ -49,6 +49,18 @@ pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
         &path_inactive,
         GraphConcTy::Inactive,
     );
+
+    if let GraphTy::Final = ty {
+        let path = "images/active-slice-final.png";
+        plot_slice(mesh, conc_data, path);
+    }
+
+    if let GraphTy::Intermediate(ts) = ty {
+        if (ts == 20.0) || (ts == 0.0) {
+            let path = format!("images/active-slice-{}.png", ts);
+            plot_slice(mesh, conc_data, &path);
+        }
+    }
 }
 
 fn get_color(val: f64) -> RGBColor {
@@ -159,5 +171,48 @@ fn do_plot(
                 })
                 .map(|(point, color)| Circle::new(point, 3, &color)),
         )
+        .unwrap();
+}
+
+fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, path: &str) {
+    let mut data: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+        // .filter(|(_, pos)|pos.z >= 0.0)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+        .collect();
+
+    data.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+
+    let root = BitMapBackend::new(path, (640, 480)).into_drawing_area();
+    root.fill(&WHITE).unwrap();
+
+    // let base = match ty {
+    //     GraphConcTy::Active => BLUE,
+    //     GraphConcTy::Inactive => RED,
+    // };
+
+    let mut chart = ChartBuilder::on(&root)
+        .margin(20)
+        .caption("slice along y = 0", ("sans-serif", 40))
+        .x_label_area_size(30)
+        .y_label_area_size(30)
+        .build_cartesian_2d(0.0..MAX_X, 0.0..MAX_VAL)
+        .unwrap();
+
+    chart
+        .configure_mesh()
+        .x_labels(5)
+        .y_labels(5)
+        .draw()
+        .unwrap();
+
+    chart
+        .draw_series(LineSeries::new(data.clone(), &RED))
+        .unwrap();
+
+    chart
+        .draw_series(data.iter().map(|p| Circle::new(*p, 2, &RED)))
         .unwrap();
 }

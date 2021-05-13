@@ -91,7 +91,7 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         let mut total_b = 0.0;
 
         let mut d_total = 0.0; // To determine when steady state has been reached
-        // Step each vertex
+                               // Step each vertex
         for v_id in mesh.vertex_iter() {
             // Debug logging
             if (i % SNAPSHOT_PERIOD) == 0 {
@@ -122,7 +122,7 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
             let b = dat.conc_b;
             let r = rate_activ.get(v_id);
 
-            let d_a =  D_A * lapl_a.get(v_id) + (r + stim_k * b);
+            let d_a = D_A * lapl_a.get(v_id) + (r + stim_k * b);
             let d_b = D_B * lapl_b.get(v_id) - (r + stim_k * b);
 
             dat.conc_a += TS * d_a;
@@ -131,9 +131,9 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
             d_total += d_a.abs() + d_b.abs();
         }
 
-        if d_total < STEADY_STATE_TOL  {
+        if d_total < STEADY_STATE_TOL {
             println!("!! Steady state reached: Stopping at t = {}", t);
-            return 
+            return;
         }
 
         if (i % SNAPSHOT_PERIOD) == 0 {
@@ -145,7 +145,10 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         t += TS;
     }
 
-    println!("Did not reach steady state: Stopping at final time t = {}", t);
+    println!(
+        "Did not reach steady state: Stopping at final time t = {}",
+        t
+    );
 
     // println!("Final conc data:");
     // print_conc_data(mesh, &conc_data);
