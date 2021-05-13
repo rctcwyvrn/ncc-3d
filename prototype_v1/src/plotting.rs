@@ -51,14 +51,10 @@ pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     );
 
     if let GraphTy::Final = ty {
-        let path = "images/active-slice-final.png";
-        plot_slice(mesh, conc_data, path);
-    }
-
-    if let GraphTy::Intermediate(ts) = ty {
+        plot_slice(mesh, conc_data, ty);
+    } else if let GraphTy::Intermediate(ts) = ty {
         if (ts == 20.0) || (ts == 0.0) {
-            let path = format!("images/active-slice-{}.png", ts);
-            plot_slice(mesh, conc_data, &path);
+            plot_slice(mesh, conc_data, ty);
         }
     }
 }
@@ -174,28 +170,57 @@ fn do_plot(
         .unwrap();
 }
 
-fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, path: &str) {
-    let mut data: Vec<_> = mesh
+fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
+    let (path_1, path_2) = match ty {
+        GraphTy::Final => (
+            "images/active-slice-final-pos_z.png".to_string(),
+            "images/active-slice-final-neg_z.png".to_string(),
+        ),
+        GraphTy::Intermediate(ts) => (
+            format!("images/active-slice-{}-pos_z.png", ts),
+            format!("images/active-slice-{}-neg_z.png", ts),
+        ),
+    };
+
+    // For planar mesh
+    let data: Vec<_> = mesh
         .vertex_iter()
         .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| pos.y.abs() <= 0.0001)
-        // .filter(|(_, pos)|pos.z >= 0.0)
+        .filter(|(_, pos)| pos.z.abs() <= 0.0001)
         .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
         .collect();
 
+    do_slice_plot(data, &path_1, "profile of planar mesh with z=0");
+
+    // let data_1: Vec<_> = mesh
+    //     .vertex_iter()
+    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+    //     .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+    //     .filter(|(_, pos)| pos.z >= 0.0)
+    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+    //     .collect();
+
+    // let data_2: Vec<_> = mesh
+    //     .vertex_iter()
+    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+    //     .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+    //     .filter(|(_, pos)| pos.z < 0.0)
+    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+    //     .collect();
+
+    // do_slice_plot(data_1, &path_1, "slice of sphere with y = 0, z>=0");
+    // do_slice_plot(data_2, &path_2, "slice of sphere with y = 0, z<0");
+}
+
+fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {
     data.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
 
     let root = BitMapBackend::new(path, (640, 480)).into_drawing_area();
     root.fill(&WHITE).unwrap();
 
-    // let base = match ty {
-    //     GraphConcTy::Active => BLUE,
-    //     GraphConcTy::Inactive => RED,
-    // };
-
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
-        .caption("slice along y = 0", ("sans-serif", 40))
+        .caption(caption, ("sans-serif", 40))
         .x_label_area_size(30)
         .y_label_area_size(30)
         .build_cartesian_2d(0.0..MAX_X, 0.0..MAX_VAL)
