@@ -16,47 +16,50 @@ pub enum GraphTy {
 
 pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     println!("Starting to plot {:?}", ty);
-    let title_active = match ty {
-        GraphTy::Intermediate(ts) => format!("Active conc. at t = {}", ts),
-        GraphTy::Final => format!("Final active conc."),
-    };
+    // let title_active = match ty {
+    //     GraphTy::Intermediate(ts) => format!("Active conc. at t = {}", ts),
+    //     GraphTy::Final => format!("Final active conc."),
+    // };
 
-    let path_active = match ty {
-        GraphTy::Intermediate(ts) => format!("images/active-{:0>4}.png", ts),
-        GraphTy::Final => format!("images/active-final.png"),
-    };
+    // let path_active = match ty {
+    //     GraphTy::Intermediate(ts) => format!("images/active-{:0>4}.png", ts),
+    //     GraphTy::Final => format!("images/active-final.png"),
+    // };
 
-    let title_inactive = match ty {
-        GraphTy::Intermediate(ts) => format!("Inactive conc. at t = {}", ts),
-        GraphTy::Final => format!("Final Inactive conc."),
-    };
+    // let title_inactive = match ty {
+    //     GraphTy::Intermediate(ts) => format!("Inactive conc. at t = {}", ts),
+    //     GraphTy::Final => format!("Final Inactive conc."),
+    // };
 
-    let path_inactive = match ty {
-        GraphTy::Intermediate(ts) => format!("images/inactive-{:0>4}.png", ts),
-        GraphTy::Final => format!("images/inactive-final.png"),
-    };
-    do_plot(
-        mesh,
-        conc_data,
-        &title_active,
-        &path_active,
-        GraphConcTy::Active,
-    );
-    do_plot(
-        mesh,
-        conc_data,
-        &title_inactive,
-        &path_inactive,
-        GraphConcTy::Inactive,
-    );
+    // let path_inactive = match ty {
+    //     GraphTy::Intermediate(ts) => format!("images/inactive-{:0>4}.png", ts),
+    //     GraphTy::Final => format!("images/inactive-final.png"),
+    // };
+    // do_plot(
+    //     mesh,
+    //     conc_data,
+    //     &title_active,
+    //     &path_active,
+    //     GraphConcTy::Active,
+    // );
+    // do_plot(
+    //     mesh,
+    //     conc_data,
+    //     &title_inactive,
+    //     &path_inactive,
+    //     GraphConcTy::Inactive,
+    // );
 
-    if let GraphTy::Final = ty {
-        plot_slice(mesh, conc_data, ty);
-    } else if let GraphTy::Intermediate(ts) = ty {
-        if (ts == 20.0) || (ts == 0.0) {
-            plot_slice(mesh, conc_data, ty);
-        }
-    }
+
+    plot_slice(mesh, conc_data, ty);
+
+    // if let GraphTy::Final = ty {
+    //     plot_slice(mesh, conc_data, ty);
+    // } else if let GraphTy::Intermediate(ts) = ty {
+    //     if (ts == 20.0) || (ts == 0.0) {
+    //         plot_slice(mesh, conc_data, ty);
+    //     }
+    // }
 }
 
 fn get_color(val: f64) -> RGBColor {
@@ -192,6 +195,16 @@ fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
 
     do_slice_plot(data, &path_1, "profile of planar mesh with z=0");
 
+    let data: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| (pos.z - 0.1).abs() <= 0.0001)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+        .collect();
+
+    do_slice_plot(data, &path_2, "profile of planar mesh with z=0.5");
+
+    // // For sphere
     // let data_1: Vec<_> = mesh
     //     .vertex_iter()
     //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
