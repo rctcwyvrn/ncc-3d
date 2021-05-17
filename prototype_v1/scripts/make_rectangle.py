@@ -1,18 +1,18 @@
 import math
 
 # L = 1
-# L = 0.5
+L = 0.5
 # L = 0.25
-L = 0.1
+# L = 0.1
 
-# height = 0.5
+height = 4
 length = 10
 
 faces = []
 positions = []
 
-# z_range = int(height // L) + 1
-z_range = 2
+z_range = int(height // L) + 1
+# z_range = 2
 x_range = int(length // L) + 1
 print(x_range, z_range)
 

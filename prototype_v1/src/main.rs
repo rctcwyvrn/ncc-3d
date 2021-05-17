@@ -17,8 +17,7 @@ const TS: f64 = 0.01;
 // const FINAL_TIME: f64 = 100.0; // Full convergence of 2D surface
 // const FINAL_TIME: f64 = 470.0; // Full convergence of icosahedron
 // const FINAL_TIME: f64 = 140.0; // Convergence of sphere
-// const FINAL_TIME: f64 = 250.0; // Testing steady_state_tol
-const FINAL_TIME: f64 = 100.0;
+const FINAL_TIME: f64 = 350.0; // Testing steady_state_tol
 
 // At what point should we stop and assume we've reached a steady state?
 // Completely arbitrary and messy, but it's better than just having a final time and hoping that its enough
@@ -55,8 +54,8 @@ fn main() -> Result<()> {
         conc_data.set(v_id, data);
     });
 
-    let stim_fn = stim::get_stim(StimTy::Gradient);
-    // let stim_fn = stim::get_stim(StimTy::Localized);
+    // let stim_fn = stim::get_stim(StimTy::Gradient);
+    let stim_fn = stim::get_stim(StimTy::Localized);
 
     plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
     simulate(&mesh, &mut conc_data, stim_fn);
@@ -114,7 +113,7 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
 
             // Debug logging
             if (i % SNAPSHOT_PERIOD) == 0 {
-            // if true {
+                // if true {
                 println!(
                     "DEBUG: ({},{},{}) ({},{}) {} | {} | {} | {}",
                     pos.x,

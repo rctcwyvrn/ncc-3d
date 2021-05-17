@@ -16,40 +16,39 @@ pub enum GraphTy {
 
 pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     println!("Starting to plot {:?}", ty);
-    // let title_active = match ty {
-    //     GraphTy::Intermediate(ts) => format!("Active conc. at t = {}", ts),
-    //     GraphTy::Final => format!("Final active conc."),
-    // };
+    let title_active = match ty {
+        GraphTy::Intermediate(ts) => format!("Active conc. at t = {}", ts),
+        GraphTy::Final => format!("Final active conc."),
+    };
 
-    // let path_active = match ty {
-    //     GraphTy::Intermediate(ts) => format!("images/active-{:0>4}.png", ts),
-    //     GraphTy::Final => format!("images/active-final.png"),
-    // };
+    let path_active = match ty {
+        GraphTy::Intermediate(ts) => format!("images/active-{:0>4}.png", ts),
+        GraphTy::Final => format!("images/active-final.png"),
+    };
 
-    // let title_inactive = match ty {
-    //     GraphTy::Intermediate(ts) => format!("Inactive conc. at t = {}", ts),
-    //     GraphTy::Final => format!("Final Inactive conc."),
-    // };
+    let title_inactive = match ty {
+        GraphTy::Intermediate(ts) => format!("Inactive conc. at t = {}", ts),
+        GraphTy::Final => format!("Final Inactive conc."),
+    };
 
-    // let path_inactive = match ty {
-    //     GraphTy::Intermediate(ts) => format!("images/inactive-{:0>4}.png", ts),
-    //     GraphTy::Final => format!("images/inactive-final.png"),
-    // };
-    // do_plot(
-    //     mesh,
-    //     conc_data,
-    //     &title_active,
-    //     &path_active,
-    //     GraphConcTy::Active,
-    // );
-    // do_plot(
-    //     mesh,
-    //     conc_data,
-    //     &title_inactive,
-    //     &path_inactive,
-    //     GraphConcTy::Inactive,
-    // );
-
+    let path_inactive = match ty {
+        GraphTy::Intermediate(ts) => format!("images/inactive-{:0>4}.png", ts),
+        GraphTy::Final => format!("images/inactive-final.png"),
+    };
+    do_plot(
+        mesh,
+        conc_data,
+        &title_active,
+        &path_active,
+        GraphConcTy::Active,
+    );
+    do_plot(
+        mesh,
+        conc_data,
+        &title_inactive,
+        &path_inactive,
+        GraphConcTy::Inactive,
+    );
 
     plot_slice(mesh, conc_data, ty);
 
@@ -174,37 +173,92 @@ fn do_plot(
 }
 
 fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
-    let (path_1, path_2) = match ty {
+    let (path_1, path_2, path_3, path_4) = match ty {
         GraphTy::Final => (
-            "images/active-slice-final-pos_z.png".to_string(),
-            "images/active-slice-final-neg_z.png".to_string(),
+            "images/active-slice-final-0.png".to_string(),
+            "images/active-slice-final-1.png".to_string(),
+            "images/inactive-slice-final-0.png".to_string(),
+            "images/inactive-slice-final-1.png".to_string(),
         ),
         GraphTy::Intermediate(ts) => (
-            format!("images/active-slice-{}-pos_z.png", ts),
-            format!("images/active-slice-{}-neg_z.png", ts),
+            format!("images/active-slice-{:0>4}-0.png", ts),
+            format!("images/active-slice-{:0>4}-1.png", ts),
+            format!("images/inactive-slice-{:0>4}-0.png", ts),
+            format!("images/inactive-slice-{:0>4}-1.png", ts),
         ),
     };
+
+    let bound_0 = 0.0;
+    let bound_1 = 2.0;
 
     // For planar mesh
     let data: Vec<_> = mesh
         .vertex_iter()
         .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| pos.z.abs() <= 0.0001)
+        .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
         .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
         .collect();
 
-    do_slice_plot(data, &path_1, "profile of planar mesh with z=0");
+    let caption = format!(
+        "profile of active protein on planar mesh with z={}",
+        bound_0
+    );
+    do_slice_plot(data, &path_1, &caption);
 
     let data: Vec<_> = mesh
         .vertex_iter()
         .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| (pos.z - 0.1).abs() <= 0.0001)
+        .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
         .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
         .collect();
 
-    do_slice_plot(data, &path_2, "profile of planar mesh with z=0.5");
+    let caption = format!(
+        "profile of active protein on planar mesh with z={}",
+        bound_1
+    );
+    do_slice_plot(data, &path_2, &caption);
+
+    let data: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_b))
+        .collect();
+
+    let caption = format!(
+        "profile of inactive protein on planar mesh with z={}",
+        bound_0
+    );
+    do_slice_plot(data, &path_3, &caption);
+
+    let data: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_b))
+        .collect();
+
+    let caption = format!(
+        "profile of inactive protein on planar mesh with z={}",
+        bound_1
+    );
+    do_slice_plot(data, &path_4, &caption);
 
     // // For sphere
+    // let (path_1, path_2, path_3, path_4) = match ty {
+    //     GraphTy::Final => (
+    //         "images/active-slice-final-pos_z.png".to_string(),
+    //         "images/active-slice-final-neg_z.png".to_string(),
+    //         "images/inactive-slice-final-pos_z.png".to_string(),
+    //         "images/inactive-slice-final-neg_z.png".to_string(),
+    //     ),
+    //     GraphTy::Intermediate(ts) => (
+    //         format!("images/active-slice-{:0>4}-pos_z.png", ts),
+    //         format!("images/active-slice-{:0>4}-neg_z.png", ts),
+    //         format!("images/inactive-slice-{:0>4}-pos_z.png", ts),
+    //         format!("images/inactive-slice-{:0>4}-neg_z.png", ts),
+    //     ),
+    // };
     // let data_1: Vec<_> = mesh
     //     .vertex_iter()
     //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
@@ -233,7 +287,7 @@ fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {
 
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
-        .caption(caption, ("sans-serif", 40))
+        .caption(caption, ("sans-serif", 10))
         .x_label_area_size(30)
         .y_label_area_size(30)
         .build_cartesian_2d(0.0..MAX_X, 0.0..MAX_VAL)
