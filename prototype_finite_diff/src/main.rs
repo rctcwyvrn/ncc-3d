@@ -6,7 +6,10 @@ const L: f64 = 10.0;
 const N: usize = (L / H) as usize;
 
 const TS: f64 = 0.001;
+
+// const FINAL_TIME: f64 = 400.0; // For reversal only
 const FINAL_TIME: f64 = 200.0;
+
 const STEPS: usize = (FINAL_TIME / TS) as usize;
 const SNAPSHOT_PERIOD: usize = 5000;
 
@@ -21,12 +24,21 @@ const D_B: f64 = 10.0;
 mod old;
 
 fn main() {
-    let mut active = init_vec(STARTING_A);
+    // let stim_ty = StimTy::Reversal;
+    // let stim_ty = StimTy::Gradient;
+    let stim_ty = StimTy::Localized;
+    // let stim_ty = StimTy::Randomized;
+
+    let mut active= if let StimTy::Randomized = stim_ty {
+        randomized_init(STARTING_A)
+    } else {
+        init_vec(STARTING_A)
+    };
+
     let mut inactive = init_vec(STARTING_B);
 
     // Stimuli
-    let stim_fn = old::get_stim(StimTy::Gradient);
-    // let stim_fn = old::get_stim(StimTy::Localized);
+    let stim_fn = old::get_stim(stim_ty);
 
     // Step diffeq
     let mut t = 0.0;
@@ -37,6 +49,10 @@ fn main() {
 
         // Reaction
         let rates = old::compute_reaction_rate(&active, &inactive);
+
+        // totals
+        let mut total_a = 0.0;
+        let mut total_b = 0.0;
 
         for x in 0..N {
             for z in 0..N {
@@ -53,18 +69,8 @@ fn main() {
                 active[x][z] += TS * d_a;
                 inactive[x][z] += TS * d_b;
 
-                if (i % SNAPSHOT_PERIOD) == 0 {
-                    println!(
-                        "DEBUG {:?} ({}, {})=> {} | {} | {} | {}",
-                        pos,
-                        active[x][z],
-                        inactive[x][z],
-                        lapl_a[x][z],
-                        lapl_b[x][z],
-                        rates[x][z],
-                        stim_k
-                    );
-                }
+                total_a += active[x][z];
+                total_b += inactive[x][z];
             }
         }
 
@@ -72,9 +78,30 @@ fn main() {
             println!("Plotting t = {}", t.round());
             plot(&active, format!("images/active-{:0>4}.png", t.round()));
 
-            if t.round() == 20.0 {
-                plot_side(&active, format!("images/active-20-side.png"));
+            if t.round() == 20.0 || t.round() == 0.0 {
+                plot(&inactive, format!("images/inactive-{:0>4}.png", t.round()));
+                plot_side(&active, format!("images/active-{}-side.png", t.round()));
             }
+
+            for x in 0..N {
+                let z = 0;
+                let pos = (x as f64 * H, z as f64 * H);
+                let stim_k = stim_fn(pos, t);
+                println!(
+                    "DEBUG {:?} ({}, {})=> {} | {} | {} | {}",
+                    pos,
+                    active[x][z],
+                    inactive[x][z],
+                    D_A * lapl_a[x][z],
+                    D_B * lapl_b[x][z],
+                    rates[x][z],
+                    stim_k
+                );
+            }
+            println!("Totals: ");
+            println!("Active: {}", total_a);
+            println!("Inactive: {}", total_b);
+            println!("Overall total: {}", total_a + total_b);
         }
 
         t += TS;
@@ -92,6 +119,29 @@ pub fn init_vec(initial_val: f64) -> Vec<Vec<f64>> {
 
     for _ in 0..N {
         vec.push(row.clone());
+    }
+
+    vec
+}
+
+fn randomized_init(central: f64) -> Vec<Vec<f64>> {
+    let mut rng = rand::thread_rng();
+
+    let mut vec = Vec::new();
+    for _ in 0..N {
+        let mut row = Vec::new();
+        // for _ in 0..N {
+        //     let r :f64 = rand::Rng::gen(&mut rng);
+        //     row.push(central * 2.0 * r);
+        // }
+
+        let r :f64 = rand::Rng::gen(&mut rng);
+        let val = central * 2.0 * r;
+        for _ in 0..N {
+            row.push(val);
+        }
+
+        vec.push(row);
     }
 
     vec

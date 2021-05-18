@@ -54,6 +54,7 @@ pub enum StimTy {
     Gradient,
     Localized,
     Reversal,
+    Randomized,
 }
 
 pub fn get_stim(ty: StimTy) -> StimFn {
@@ -86,7 +87,7 @@ pub fn get_stim(ty: StimTy) -> StimFn {
                 } else {
                     0.0
                 };
-                
+
                 if t <= T0_REV {
                     s * (L_GRAD - pos.0)
                 } else {
@@ -112,6 +113,9 @@ pub fn get_stim(ty: StimTy) -> StimFn {
                 }
             };
             f
+        }
+        StimTy::Randomized => {
+            |_, _| 0.0
         }
     }
 }
