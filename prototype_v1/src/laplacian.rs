@@ -20,6 +20,7 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
         .map(|face_id| (mesh.face_area(face_id), mesh.face_vertices(face_id)))
         .collect();
 
+    let mut total = 0;
     for v_id in mesh.vertex_iter() {
         // Compute laplacian for this v_id according to formula 2.1
         let mut total_sum = 0.0;
@@ -37,11 +38,12 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
             sum_face += compute_pair(mesh, f, &mut memo, v_id, vert_ids.1);
             sum_face += compute_pair(mesh, f, &mut memo, v_id, vert_ids.2);
 
-            total_sum += sum_face * area / num_t
+            total_sum += sum_face * area / num_t;
+            total += 3;
         }
         lapl.set(v_id, total_sum / (4.0 * std::f64::consts::PI * H.powi(2)));
     }
-
+    println!("Total verts considered = {}", total);
     lapl
 }
 

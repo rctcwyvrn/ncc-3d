@@ -188,95 +188,80 @@ fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
         ),
     };
 
-    let bound_0 = 0.0;
-    let bound_1 = 2.0;
-
     // For planar mesh
-    let data: Vec<_> = mesh
-        .vertex_iter()
-        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
-        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
-        .collect();
-
-    let caption = format!(
-        "profile of active protein on planar mesh with z={}",
-        bound_0
-    );
-    do_slice_plot(data, &path_1, &caption);
-
-    let data: Vec<_> = mesh
-        .vertex_iter()
-        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
-        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
-        .collect();
-
-    let caption = format!(
-        "profile of active protein on planar mesh with z={}",
-        bound_1
-    );
-    do_slice_plot(data, &path_2, &caption);
-
-    let data: Vec<_> = mesh
-        .vertex_iter()
-        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
-        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_b))
-        .collect();
-
-    let caption = format!(
-        "profile of inactive protein on planar mesh with z={}",
-        bound_0
-    );
-    do_slice_plot(data, &path_3, &caption);
-
-    let data: Vec<_> = mesh
-        .vertex_iter()
-        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
-        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_b))
-        .collect();
-
-    let caption = format!(
-        "profile of inactive protein on planar mesh with z={}",
-        bound_1
-    );
-    do_slice_plot(data, &path_4, &caption);
-
-    // // For sphere
-    // let (path_1, path_2, path_3, path_4) = match ty {
-    //     GraphTy::Final => (
-    //         "images/active-slice-final-pos_z.png".to_string(),
-    //         "images/active-slice-final-neg_z.png".to_string(),
-    //         "images/inactive-slice-final-pos_z.png".to_string(),
-    //         "images/inactive-slice-final-neg_z.png".to_string(),
-    //     ),
-    //     GraphTy::Intermediate(ts) => (
-    //         format!("images/active-slice-{:0>4}-pos_z.png", ts),
-    //         format!("images/active-slice-{:0>4}-neg_z.png", ts),
-    //         format!("images/inactive-slice-{:0>4}-pos_z.png", ts),
-    //         format!("images/inactive-slice-{:0>4}-neg_z.png", ts),
-    //     ),
-    // };
-    // let data_1: Vec<_> = mesh
+    // let bound_0 = 0.0;
+    // let bound_1 = 2.0;
+    // let data: Vec<_> = mesh
     //     .vertex_iter()
     //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-    //     .filter(|(_, pos)| pos.y.abs() <= 0.0001)
-    //     .filter(|(_, pos)| pos.z >= 0.0)
+    //     .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
     //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
     //     .collect();
 
-    // let data_2: Vec<_> = mesh
+    // let caption = format!(
+    //     "profile of active protein on planar mesh with z={}",
+    //     bound_0
+    // );
+    // do_slice_plot(data, &path_1, &caption);
+
+    // let data: Vec<_> = mesh
     //     .vertex_iter()
     //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-    //     .filter(|(_, pos)| pos.y.abs() <= 0.0001)
-    //     .filter(|(_, pos)| pos.z < 0.0)
+    //     .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
     //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
     //     .collect();
 
-    // do_slice_plot(data_1, &path_1, "slice of sphere with y = 0, z>=0");
-    // do_slice_plot(data_2, &path_2, "slice of sphere with y = 0, z<0");
+    // let caption = format!(
+    //     "profile of active protein on planar mesh with z={}",
+    //     bound_1
+    // );
+    // do_slice_plot(data, &path_2, &caption);
+
+    // let data: Vec<_> = mesh
+    //     .vertex_iter()
+    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+    //     .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
+    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_b))
+    //     .collect();
+
+    // let caption = format!(
+    //     "profile of inactive protein on planar mesh with z={}",
+    //     bound_0
+    // );
+    // do_slice_plot(data, &path_3, &caption);
+
+    // let data: Vec<_> = mesh
+    //     .vertex_iter()
+    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+    //     .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
+    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_b))
+    //     .collect();
+
+    // let caption = format!(
+    //     "profile of inactive protein on planar mesh with z={}",
+    //     bound_1
+    // );
+    // do_slice_plot(data, &path_4, &caption);
+
+    // For sphere
+    let data_1: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+        .filter(|(_, pos)| pos.z >= 0.0)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+        .collect();
+
+    let data_2: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+        .filter(|(_, pos)| pos.z < 0.0)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+        .collect();
+
+    do_slice_plot(data_1, &path_1, "slice of sphere with y = 0, z>=0");
+    do_slice_plot(data_2, &path_2, "slice of sphere with y = 0, z<0");
 }
 
 fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {

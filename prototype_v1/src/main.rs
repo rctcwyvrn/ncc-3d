@@ -54,8 +54,8 @@ fn main() -> Result<()> {
         conc_data.set(v_id, data);
     });
 
-    // let stim_fn = stim::get_stim(StimTy::Gradient);
-    let stim_fn = stim::get_stim(StimTy::Localized);
+    let stim_fn = stim::get_stim(StimTy::Gradient);
+    // let stim_fn = stim::get_stim(StimTy::Localized);
 
     plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
     simulate(&mesh, &mut conc_data, stim_fn);
@@ -67,11 +67,6 @@ fn main() -> Result<()> {
 fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) {
     let mut t: f64 = 0.0;
     for i in 0..(FINAL_TIME / TS).round() as usize {
-        if (i % SNAPSHOT_PERIOD) == 0 {
-            // Periodic plots
-            plot_data(mesh, conc_data, GraphTy::Intermediate(t.round()));
-        }
-
         // Compute diffusion laplacians
         let mut conc_a_data = VecStore::new(&mesh);
         let mut conc_b_data = VecStore::new(&mesh);
@@ -137,6 +132,8 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         }
 
         if (i % SNAPSHOT_PERIOD) == 0 {
+            plot_data(mesh, conc_data, GraphTy::Intermediate(t.round()));
+
             println!("Total active = {}", total_a);
             println!("Total inactive = {}", total_b);
             println!("Full total = {}", total_a + total_b);
