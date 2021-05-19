@@ -1,3 +1,6 @@
 [submodule "prototype_v1/tri-mesh"]
 	path = prototype_v1/tri-mesh
 	url = git@github.com:rctcwyvrn/tri-mesh.git
+[submodule "prototype_v1/pyhks"]
+	path = prototype_v1/pyhks
+	url = git@github.com:ctralie/pyhks.git

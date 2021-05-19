@@ -1,5 +1,6 @@
 /prototype_v1/results
-/prototype_v1/mesh.obj
+**/*.obj
+**/*.off
 /prototype_v1/venv
 **/images
 **/target
