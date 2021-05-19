@@ -4,8 +4,12 @@ use eyre::Result;
 use plotting::{plot_data, GraphTy};
 use stim::{StimFn, StimTy};
 use storage::VecStore;
-use tri_mesh::{prelude::Mesh, MeshBuilder};
+use tri_mesh::{
+    prelude::{Mesh, Vector3},
+    MeshBuilder,
+};
 
+mod cotangent_laplacian;
 mod chemistry;
 mod laplacian;
 mod plotting;
@@ -45,23 +49,77 @@ fn main() -> Result<()> {
     let obj_source = fs::read_to_string(mesh_filename)?;
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
 
-    let mut conc_data = VecStore::new(&mesh);
+    // // f(x,z) = x^2, rectangular
+    let f = |pos: Vector3<f64>| pos.x.powi(2);
+
+    let soln = |_: Vector3<f64>| 2.0;
+
+    // f(x,z) = e^(x+z)
+    // let f = | pos: Vector3<f64> | {
+    //     (pos.x + pos.z).exp()
+    // };
+
+    // let soln = | pos: Vector3<f64> | {
+    //     2.0 * (pos.x + pos.z).exp()
+    // };
+
+    let mut test_data = VecStore::new(&mesh);
     mesh.vertex_iter().for_each(|v_id| {
-        let data = VertexData {
-            conc_a: STARTING_A,
-            conc_b: STARTING_B,
-        };
-        conc_data.set(v_id, data);
+        let pos = mesh.vertex_position(v_id);
+        let data = f(pos);
+        test_data.set(v_id, data);
     });
 
-    // let stim_fn = stim::get_stim(StimTy::Gradient);
-    let stim_fn = stim::get_stim(StimTy::Localized);
+    let lapl_belkin = laplacian::compute_laplacian(&mesh, &test_data);
+    let lapl_cotan = cotangent_laplacian::compute_laplacian(&mesh, &test_data);
 
-    plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
-    simulate(&mesh, &mut conc_data, stim_fn);
-    plot_data(&mesh, &conc_data, GraphTy::Final);
+    for v_id in mesh.vertex_iter() {
+        let pos = mesh.vertex_position(v_id);
+        let s = soln(pos);
 
+        let val = lapl_belkin.get(v_id);
+        println!(
+            "A ({},{},{}) {} | {} | {} | {}",
+            pos.x,
+            pos.y,
+            pos.z,
+            test_data.get(v_id),
+            val,
+            s,
+            (s - val).abs()
+        );
+
+        let val = lapl_cotan.get(v_id);
+        println!(
+            "B ({},{},{}) {} | {} | {} | {}",
+            pos.x,
+            pos.y,
+            pos.z,
+            test_data.get(v_id),
+            val,
+            s,
+            (s - val).abs()
+        );
+    }
     Ok(())
+
+    // let mut conc_data = VecStore::new(&mesh);
+    // mesh.vertex_iter().for_each(|v_id| {
+    //     let data = VertexData {
+    //         conc_a: STARTING_A,
+    //         conc_b: STARTING_B,
+    //     };
+    //     conc_data.set(v_id, data);
+    // });
+
+    // // let stim_fn = stim::get_stim(StimTy::Gradient);
+    // let stim_fn = stim::get_stim(StimTy::Localized);
+
+    // plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
+    // simulate(&mesh, &mut conc_data, stim_fn);
+    // plot_data(&mesh, &conc_data, GraphTy::Final);
+
+    // Ok(())
 }
 
 fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) {

@@ -1,12 +1,12 @@
 import math
 
 # L = 1
-L = 0.5
+# L = 0.5
 # L = 0.25
-# L = 0.1
+L = 0.05
 
-height = 4
-length = 10
+height = 1
+length = 1
 
 faces = []
 positions = []

@@ -7,7 +7,7 @@ use crate::storage::VecStore;
 // This seems good for now
 // const H: f64 = 1.0;
 // const H: f64 = 0.5;
-const H: f64 = 0.01;
+const H: f64 = 0.05;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
 pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
