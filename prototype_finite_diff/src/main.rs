@@ -5,13 +5,13 @@ const H: f64 = 0.2;
 const L: f64 = 10.0;
 const N: usize = (L / H) as usize;
 
-const TS: f64 = 0.001;
+const TS: f64 = 0.0001;
 
 // const FINAL_TIME: f64 = 400.0; // For reversal only
 const FINAL_TIME: f64 = 200.0;
 
 const STEPS: usize = (FINAL_TIME / TS) as usize;
-const SNAPSHOT_PERIOD: usize = 5000;
+const SNAPSHOT_PERIOD: usize = 50000;
 
 // Steady state pair of A,B
 const STARTING_A: f64 = 0.2683312;
@@ -190,9 +190,10 @@ fn plot(f: &Vec<Vec<f64>>, path: String) {
     let root = BitMapBackend::new(&path, (640, 480)).into_drawing_area();
     root.fill(&WHITE).unwrap();
 
+    let caption = format!("Planar mesh | dx = {} | dt = {}", H, TS);
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
-        .caption("plaaaaanar", ("sans-serif", 40))
+        .caption(&caption, ("sans-serif", 40))
         .build_cartesian_3d(0.0..L, 0.0..2.0, 0.0..L)
         .unwrap();
 
@@ -214,9 +215,10 @@ fn plot_side(f: &Vec<Vec<f64>>, path: String) {
     let root = BitMapBackend::new(&path, (640, 480)).into_drawing_area();
     root.fill(&WHITE).unwrap();
 
+    let caption = format!("Planar mesh | dx = {} | dt = {}", H, TS);
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
-        .caption("plaaaaanar", ("sans-serif", 40))
+        .caption(&caption, ("sans-serif", 40))
         .build_cartesian_3d(0.0..L, 0.0..2.0, 0.0..L)
         .unwrap();
 

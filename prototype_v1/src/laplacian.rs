@@ -5,8 +5,9 @@ use crate::storage::VecStore;
 // This constant determines how much farther away verts can affect the current vert
 // Higher h = less (?) effect from farther verts
 // This seems good for now
-const H: f64 = 1.0;
+// const H: f64 = 1.0;
 // const H: f64 = 0.5;
+const H: f64 = 0.01;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
 pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {

@@ -54,8 +54,8 @@ fn main() -> Result<()> {
         conc_data.set(v_id, data);
     });
 
-    let stim_fn = stim::get_stim(StimTy::Gradient);
-    // let stim_fn = stim::get_stim(StimTy::Localized);
+    // let stim_fn = stim::get_stim(StimTy::Gradient);
+    let stim_fn = stim::get_stim(StimTy::Localized);
 
     plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
     simulate(&mesh, &mut conc_data, stim_fn);
