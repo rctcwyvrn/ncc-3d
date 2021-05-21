@@ -58,7 +58,7 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
             }
 
             let w = cotan_a + cotan_b;
-            sum += w * (f.get(v_id) - f.get(v_j_id));
+            sum += w * (f.get(v_j_id) - f.get(v_id));
 
             // println!("Running sum = {}", sum);
             // println!("Running area = {}", area);
