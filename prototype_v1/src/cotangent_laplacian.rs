@@ -27,12 +27,14 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
             let v_n_id = other(mesh, v_id, next);
             let v_n = mesh.vertex_position(v_n_id);
 
-            // println!("{:?} | {:?} | {:?}", v_j, v_p, v_n);
+            // println!("j: {:?} | prev: {:?} | next: {:?}", v_j, v_p, v_n);
 
             let v1 = v_i - v_p;
             let v2 = v_j - v_p;
             let v3 = v_i - v_n;
             let v4 = v_j - v_n;
+
+            // println!("v1-4: {:?} | {:?} | {:?} | {:?}", v1,v2,v3,v4);
 
             let mut cotan_a = cotan(v1, v2);
             let mut cotan_b = cotan(v3, v4);
@@ -58,8 +60,10 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
             }
 
             let w = cotan_a + cotan_b;
-            sum += w * (f.get(v_j_id) - f.get(v_id));
+            let diff = f.get(v_j_id) - f.get(v_id);
+            sum += w * diff;
 
+            // println!("{} | w: {} | diff: {}", w*diff, w, diff);
             // println!("Running sum = {}", sum);
             // println!("Running area = {}", area);
         }

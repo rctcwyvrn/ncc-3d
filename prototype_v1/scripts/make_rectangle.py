@@ -1,11 +1,11 @@
 import math
+import random
 
 # L = 1
 # L = 0.5
 # L = 0.25
 # L = 0.01
-L = 0.005
-# L = 0.005 # causes the rust code to use too much memory and get killed
+L = 0.005 # causes the belkin code to explode and die
 
 height = 1
 length = 1
@@ -18,13 +18,19 @@ z_range = int(height // L) + 1
 x_range = int(length // L) + 1
 print(x_range, z_range)
 
+# to make the rectangle less uniform
+# shift_base = L / 20
+shift_base = 0
+
 i = 0
 x_pos = 0
 
 top_row = []
 # first middle row
 for _ in range(x_range):
-    positions.append((x_pos,0.0,0.0))
+    shift = (random.random() - 0.5) * shift_base
+    positions.append((x_pos + shift, 0.0,0.0))
+    # positions.append((x_pos,0.0,0.0))
     top_row.append(i)
     x_pos += L
     i += 1
@@ -36,12 +42,20 @@ for z in range(z_range-1):
     x_pos = 0
     new_top = []
     for x in range(x_range):
-        positions.append((x_pos, 0.0, z_pos))
+        shift_x = (random.random() - 0.5) * shift_base
+        shift_z = (random.random() - 0.5) * shift_base
+        positions.append((x_pos + shift_x, 0.0, z_pos + shift_z))
+        # positions.append((x_pos, 0.0, z_pos))
+
         new_top.append(i)
         if x >= x_range - 1:
             i+=1
             continue
-        positions.append((x_pos + L/2, 0.0, z_pos - L/2))
+
+        shift_x = (random.random() - 0.5) * shift_base
+        shift_z = (random.random() - 0.5) * shift_base
+        positions.append((x_pos + shift_x - L/2, 0.0, z_pos + shift_z - L/2))
+        # positions.append((x_pos + L/2, 0.0, z_pos - L/2))
 
         faces.append([i, i + 1, top_row[x]])
         faces.append([i, i + 2 , i + 1])
