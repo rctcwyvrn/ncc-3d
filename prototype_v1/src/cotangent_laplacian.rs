@@ -42,9 +42,11 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
             // println!("cotan_a = {} | cotan_b = {}", cotan_a, cotan_b);
 
             // If this edge is on the boundary, then one of these two cotans is bad
-            if is_edge_on_boundary(mesh, edges[j]) {
+
+            if mesh.is_edge_on_boundary(edges[j]) {
                 // Throw out the one that is also a boundary edge
-                if is_edge_on_boundary(mesh, next) {
+
+                if mesh.is_edge_on_boundary(next) {
                     cotan_b = 0.0;
                     // println!("throwing out cotan b (computed with v_next)");
                 } else {
@@ -53,10 +55,12 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
                 }
             }
 
-            if !is_edge_on_boundary(mesh, next) {
+            if !mesh.is_edge_on_boundary(next) || !mesh.is_edge_on_boundary(prev) {
                 let v1 = v_j - v_i;
                 let v2 = v_n - v_i;
-                area += v1.cross(v2).magnitude() / 2.0;
+                let triangle_area = v1.cross(v2).magnitude() / 2.0;
+                // area += triangle_area;
+                area += triangle_area / 3.0;
             }
 
             let w = cotan_a + cotan_b;
@@ -81,16 +85,6 @@ fn other(mesh: &Mesh, v_id: VertexID, e_id: HalfEdgeID) -> VertexID {
     } else {
         v2
     }
-}
-
-fn is_edge_on_boundary(mesh: &Mesh, e_id: HalfEdgeID) -> bool {
-    let (v_i, v_j) = mesh.edge_vertices(e_id);
-    is_on_boundary(mesh, v_i) && is_on_boundary(mesh, v_j)
-}
-
-fn is_on_boundary(mesh: &Mesh, v_id: VertexID) -> bool {
-    let edges: Vec<_> = mesh.vertex_halfedge_iter(v_id).collect(); 
-    edges.len() == 3 || edges.len() == 5
 }
 
 fn cotan(a: Vector3<f64>, b: Vector3<f64>) -> f64 {
