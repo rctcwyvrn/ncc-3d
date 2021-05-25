@@ -1,10 +1,13 @@
 import math
 
 # L = 1
-L = 0.5
-# L = 0.25
-height = 10
-length = 10
+# L = 0.5
+L = 0.03
+# L = 0.01
+# L = 0.007
+
+height = 1
+length = 1
 
 faces = []
 positions = []
@@ -58,7 +61,8 @@ for z in range(z_range):
     z_pos += z_step
 
 print(f"Num verts = {len(positions)}")
-print(f"max x = {x_pos - 0.5 * L}")
+print(f"Num faces = {len(faces)}")
+
 
 with open("mesh.obj", "w") as f:
     for (x,y,z) in positions:
@@ -66,3 +70,13 @@ with open("mesh.obj", "w") as f:
     
     for (a,b,c) in faces:
         f.write(f"f {a+1} {b+1} {c+1}\n")
+
+
+with open("mesh.off", "w") as f:
+    f.write("OFF\n")
+    f.write(f"{len(positions)} {len(faces)} 0\n")
+    for (x,y,z) in positions:
+        f.write(f" {x} {y} {z}\n")
+    
+    for (a,b,c) in faces:
+        f.write(f"3 {a} {b} {c}\n")

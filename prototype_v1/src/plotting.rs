@@ -1,5 +1,5 @@
 use plotters::prelude::*;
-use tri_mesh::prelude::Mesh;
+use tri_mesh::prelude::{Mesh, Vector3};
 
 use crate::{storage::VecStore, VertexData};
 
@@ -291,5 +291,40 @@ fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {
 
     chart
         .draw_series(data.iter().map(|p| Circle::new(*p, 2, &RED)))
+        .unwrap();
+}
+
+
+pub fn plot_lapl_error(err: Vec<(Vector3<f64>, f64)>) {
+    let root = BitMapBackend::new("images/lapl_error.png", (640, 480)).into_drawing_area();
+    root.fill(&WHITE).unwrap();
+
+    // let base = match ty {
+    //     GraphConcTy::Active => BLUE,
+    //     GraphConcTy::Inactive => RED,
+    // };
+
+    let mut chart = ChartBuilder::on(&root)
+        .margin(20)
+        .caption("L_mesh(v) - L_true(v) on the rhombus", ("sans-serif", 20))
+        .build_cartesian_3d(0.0..1.0, -10.0..5.0, -1.0..1.0)
+        .unwrap();
+
+    // DEBUG: Top down look
+    // chart.with_projection(|mut pb| {
+    //     pb.pitch = std::f64::consts::FRAC_PI_2;
+    //     pb.yaw = 0.0;
+    //     pb.scale = 1.0;
+    //     pb.into_matrix()
+    // });
+
+    chart.configure_axes().draw().unwrap();
+
+    chart
+        .draw_series(
+            err.iter()
+            .map(|(p, err)| (p.x, *err, p.z))
+            .map(|point| Circle::new(point, 1, &BLACK)),
+        )
         .unwrap();
 }

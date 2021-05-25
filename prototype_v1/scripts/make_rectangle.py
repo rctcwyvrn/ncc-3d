@@ -19,7 +19,8 @@ x_range = int(length // L) + 1
 print(x_range, z_range)
 
 # to make the rectangle less uniform
-# shift_base = L / 20
+# shift_base = L / 5
+# shift_base = L / 50
 shift_base = 0
 
 i = 0
@@ -54,7 +55,7 @@ for z in range(z_range-1):
 
         shift_x = (random.random() - 0.5) * shift_base
         shift_z = (random.random() - 0.5) * shift_base
-        positions.append((x_pos + shift_x - L/2, 0.0, z_pos + shift_z - L/2))
+        positions.append((x_pos + shift_x + L/2, 0.0, z_pos + shift_z - L/2))
         # positions.append((x_pos + L/2, 0.0, z_pos - L/2))
 
         faces.append([i, i + 1, top_row[x]])

@@ -49,11 +49,8 @@ fn main() -> Result<()> {
     let obj_source = fs::read_to_string(mesh_filename)?;
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
 
-    println!("Mesh generated");
-
     // // f(x,z) = x^2, rectangular
     let f = |pos: Vector3<f64>| pos.x.powi(2);
-
     let soln = |_: Vector3<f64>| 2.0;
 
     // f(x,z) = e^(x+z)
@@ -72,19 +69,40 @@ fn main() -> Result<()> {
         test_data.set(v_id, data);
     });
 
-    // let lapl_belkin = laplacian::compute_laplacian(&mesh, &test_data);
-    let lapl_cotan = cotangent_laplacian::compute_laplacian(&mesh, &test_data);
+    let lapl_belkin = laplacian::compute_laplacian(&mesh, &test_data);
+    // let lapl_cotan = cotangent_laplacian::compute_laplacian(&mesh, &test_data);
+
+    let mut errors = Vec::new();
 
     for v_id in mesh.vertex_iter() {
         let pos = mesh.vertex_position(v_id);
+        let s = soln(pos);
 
-        if pos.x < 0.1 || pos.x > 0.9 || pos.z < 0.1 || pos.z > 0.9 {
+        let val_belkin = lapl_belkin.get(v_id);
+        // errors.push((pos, (val_belkin - s)));
+        eprintln!("({},{},{}), {}", pos.x, pos.y, pos.z, val_belkin - s);
+
+        // if pos.x < 0.25 || pos.x > 0.75 || pos.z < 0.25 || pos.z > 0.75 {
+        if pos.x < 0.25 || pos.x > 0.75 || pos.z > 0.25 || pos.z < -0.25 {
             continue;
         } else {
-            let s = soln(pos);
-            // let val = lapl_belkin.get(v_id);
-            // println!(
-            //     // "A ({},{},{}) {} | {} | {} | {}",
+            println!(
+                // "A ({},{},{}) {} | {} | {} | {}",
+                "{},{},{},{},{},{},{}",
+                pos.x,
+                pos.y,
+                pos.z,
+                val_belkin,
+                test_data.get(v_id),
+                s,
+                (s - val_belkin).abs()
+            );
+
+            errors.push((pos, (val_belkin - s)));
+
+            // let val = lapl_cotan.get(v_id);
+            // eprintln!(
+            //     // "B ({},{},{}) {} | {} | {} | {}",
             //     "{},{},{},{},{},{},{}",
             //     pos.x,
             //     pos.y,
@@ -94,21 +112,11 @@ fn main() -> Result<()> {
             //     s,
             //     (s - val).abs()
             // );
-
-            let val = lapl_cotan.get(v_id);
-            eprintln!(
-                // "B ({},{},{}) {} | {} | {} | {}",
-                "{},{},{},{},{},{},{}",
-                pos.x,
-                pos.y,
-                pos.z,
-                val,
-                test_data.get(v_id),
-                s,
-                (s - val).abs()
-            );
         }
     }
+
+    plotting::plot_lapl_error(errors);
+
     Ok(())
 
     // let mut conc_data = VecStore::new(&mesh);
