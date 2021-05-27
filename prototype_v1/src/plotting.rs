@@ -294,7 +294,6 @@ fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {
         .unwrap();
 }
 
-
 pub fn plot_lapl_error(err: Vec<(Vector3<f64>, f64)>) {
     let root = BitMapBackend::new("images/lapl_error.png", (640, 480)).into_drawing_area();
     root.fill(&WHITE).unwrap();
@@ -306,8 +305,11 @@ pub fn plot_lapl_error(err: Vec<(Vector3<f64>, f64)>) {
 
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
-        .caption("L_mesh(v) - L_true(v) on the rhombus", ("sans-serif", 20))
-        .build_cartesian_3d(0.0..1.0, -10.0..5.0, -1.0..1.0)
+        // .caption("L_mesh(v) - L_true(v) on the rhombus", ("sans-serif", 20))
+        // .build_cartesian_3d(0.0..1.0, -10.0..5.0, -1.0..1.0)
+        .caption("L_mesh(v) - L_true(v) on the hexrec", ("sans-serif", 20))
+        // .build_cartesian_3d(0.0..1.0, -10.0..5.0, 0.0..1.2)
+        .build_cartesian_3d(0.0..1.0, -15.0..5.0, 0.0..1.2)
         .unwrap();
 
     // DEBUG: Top down look
@@ -323,8 +325,8 @@ pub fn plot_lapl_error(err: Vec<(Vector3<f64>, f64)>) {
     chart
         .draw_series(
             err.iter()
-            .map(|(p, err)| (p.x, *err, p.z))
-            .map(|point| Circle::new(point, 1, &BLACK)),
+                .map(|(p, err)| (p.x, *err, p.z))
+                .map(|point| Circle::new(point, 1, &BLACK)),
         )
         .unwrap();
 }

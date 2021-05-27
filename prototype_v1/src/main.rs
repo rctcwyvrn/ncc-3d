@@ -9,8 +9,8 @@ use tri_mesh::{
     MeshBuilder,
 };
 
-mod cotangent_laplacian;
 mod chemistry;
+mod cotangent_laplacian;
 mod laplacian;
 mod plotting;
 mod stim;
@@ -49,9 +49,13 @@ fn main() -> Result<()> {
     let obj_source = fs::read_to_string(mesh_filename)?;
     let mesh = MeshBuilder::new().with_obj(obj_source).build().unwrap();
 
-    // // f(x,z) = x^2, rectangular
-    let f = |pos: Vector3<f64>| pos.x.powi(2);
-    let soln = |_: Vector3<f64>| 2.0;
+    // // f(x,z) = x^2
+    // let f = |pos: Vector3<f64>| pos.x.powi(2);
+    // let soln = |_: Vector3<f64>| 2.0;
+
+    // // f(x,z) = x^2 + z^2
+    // let f = |pos: Vector3<f64>| pos.x.powi(2) + pos.z.powi(2);
+    // let soln = |_: Vector3<f64>| 4.0;
 
     // f(x,z) = e^(x+z)
     // let f = | pos: Vector3<f64> | {
@@ -61,6 +65,44 @@ fn main() -> Result<()> {
     // let soln = | pos: Vector3<f64> | {
     //     2.0 * (pos.x + pos.z).exp()
     // };
+
+    // Spherical
+    // f(x,y,z) = x
+    // let f = |pos: Vector3<f64>| pos.x;
+    // let soln = |pos: Vector3<f64>| {
+    //     let theta = (pos.x.powi(2) + pos.y.powi(2)).sqrt().atan2(pos.z);
+    //     let phi = pos.y.atan2(pos.x);
+
+    //     phi.cos() / theta.sin() * (2.0 * theta).cos() - phi.cos() / theta.sin()
+    // };
+
+    // f(x,y,z) = x^2
+    // let f = |pos: Vector3<f64>| pos.x.powi(2);
+    // let soln = |pos: Vector3<f64>| {
+    //     let theta = (pos.x.powi(2) + pos.y.powi(2)).sqrt().atan2(pos.z);
+    //     let phi = pos.y.atan2(pos.x);
+
+    //     2.0 * phi.cos().powi(2) * (2.0 * theta.cos().powi(2) - theta.sin().powi(2))
+    //         - 2.0 * (2.0 * phi).cos()
+    // };
+    
+    // f(x,y,z) = e^x
+    let f = |pos: Vector3<f64>| pos.x.exp();
+    let soln = |pos: Vector3<f64>| {
+        let theta = (pos.x.powi(2) + pos.y.powi(2)).sqrt().atan2(pos.z);
+        let phi = pos.y.atan2(pos.x);
+
+        let sin_theta = theta.sin();
+        let cos_theta = theta.cos();
+        let sin_phi = phi.sin();
+        let cos_phi = phi.cos();
+
+        (sin_theta * cos_phi).exp() / sin_theta * 
+        ( 
+            cos_phi.powi(2) * cos_theta/2.0 * (2.0*theta).sin() + cos_phi * (2.0*theta).cos() + 
+            sin_phi.powi(2) * sin_theta - cos_phi
+        )
+    };
 
     let mut test_data = VecStore::new(&mesh);
     mesh.vertex_iter().for_each(|v_id| {
@@ -72,18 +114,28 @@ fn main() -> Result<()> {
     let lapl_belkin = laplacian::compute_laplacian(&mesh, &test_data);
     // let lapl_cotan = cotangent_laplacian::compute_laplacian(&mesh, &test_data);
 
-    let mut errors = Vec::new();
+    // let mut errors = Vec::new();
+    let mut l2_error_num = 0.0;
+    let mut l2_error_denom = 0.0;
 
     for v_id in mesh.vertex_iter() {
         let pos = mesh.vertex_position(v_id);
         let s = soln(pos);
 
         let val_belkin = lapl_belkin.get(v_id);
-        // errors.push((pos, (val_belkin - s)));
-        eprintln!("({},{},{}), {}", pos.x, pos.y, pos.z, val_belkin - s);
+        // errors.push((pos, (val_belkin - s))); // graph all errors
 
-        // if pos.x < 0.25 || pos.x > 0.75 || pos.z < 0.25 || pos.z > 0.75 {
-        if pos.x < 0.25 || pos.x > 0.75 || pos.z > 0.25 || pos.z < -0.25 {
+        // eprintln!("({},{},{}), {}", pos.x, pos.y, pos.z, val_belkin - s);
+
+        if !s.is_nan() { 
+            l2_error_num += (s - val_belkin).powi(2);
+            l2_error_denom += s.powi(2);
+        }
+
+        // if pos.x < 0.25 || pos.x > 0.75 || pos.z < 0.25 || pos.z > 0.75 { // Rectangle
+        // if pos.x < 0.25 || pos.x > 0.75 || pos.z > 0.25 || pos.z < -0.25 { // Rhombus
+        if false {
+            // Sphere
             continue;
         } else {
             println!(
@@ -98,7 +150,7 @@ fn main() -> Result<()> {
                 (s - val_belkin).abs()
             );
 
-            errors.push((pos, (val_belkin - s)));
+            // errors.push((pos, (val_belkin - s))); // graph only the errors on the interior
 
             // let val = lapl_cotan.get(v_id);
             // eprintln!(
@@ -115,7 +167,8 @@ fn main() -> Result<()> {
         }
     }
 
-    plotting::plot_lapl_error(errors);
+    eprintln!("L2 error = {}", l2_error_num.sqrt() / &l2_error_denom.sqrt());
+    // plotting::plot_lapl_error(errors);
 
     Ok(())
 

@@ -2,10 +2,11 @@ import math
 import random
 
 # L = 1
+L = 0.1
 # L = 0.5
 # L = 0.25
 # L = 0.01
-L = 0.005 # causes the belkin code to explode and die
+# L = 0.005 # causes the belkin code to explode and die
 
 height = 1
 length = 1

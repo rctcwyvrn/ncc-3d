@@ -18,8 +18,8 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
             let v_j_id = other(mesh, v_id, edges[j]);
             let v_j = mesh.vertex_position(v_j_id);
 
-            let prev = edges[(j-1+n) % n];
-            let next = edges[(j+1) % n ];
+            let prev = edges[(j - 1 + n) % n];
+            let next = edges[(j + 1) % n];
 
             let v_p_id = other(mesh, v_id, prev);
             let v_p = mesh.vertex_position(v_p_id);
@@ -75,7 +75,6 @@ pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {
     }
     lapl
 }
-
 
 // Return the vertex id for the vertex that is not v_id
 fn other(mesh: &Mesh, v_id: VertexID, e_id: HalfEdgeID) -> VertexID {

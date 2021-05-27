@@ -5,7 +5,10 @@ import math
 pi = math.pi
 phiaa = 26.56505
 verts = [(-1,-1,-1) for _ in range(12)]
-r = 5
+
+# r = 5
+r = 1 # unit sphere
+
 phia = pi * phiaa / 180
 theb = pi * 36 / 180
 the72 = pi * 72 / 180
@@ -77,7 +80,8 @@ def subdivide(verts, faces):
 
     return verts, faces
 
-num_subdivides = 2
+num_subdivides = 3
+# num_subdivides = 5
 for _ in range(num_subdivides):
     verts, faces = subdivide(verts, faces)
 
@@ -85,7 +89,21 @@ print(f"Verts in sphere = {len(verts)} | num faces = {len(faces)}")
 with open("mesh.obj", "w") as f:
     for (x,y,z) in verts:
         # add r to x to shift it over from [-r, r] to [0, 2r]
-        f.write(f"v {x+r} {y} {z}\n")
+        # f.write(f"v {x+r} {y} {z}\n")
+
+        f.write(f"v {x} {y} {z}\n")
     
     for (a,b,c) in faces:
         f.write(f"f {a+1} {b+1} {c+1}\n")
+
+with open("mesh.off", "w") as f:
+    f.write("OFF\n")
+    f.write(f"{len(verts)} {len(faces)} 0\n")
+    for (x,y,z) in verts:
+        # add r to x to shift it over from [-r, r] to [0, 2r]
+        # f.write(f"v {x+r} {y} {z}\n")
+
+        f.write(f" {x} {y} {z}\n")
+    
+    for (a,b,c) in faces:
+        f.write(f"3 {a} {b} {c}\n")
