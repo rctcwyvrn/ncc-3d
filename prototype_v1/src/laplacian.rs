@@ -2,7 +2,8 @@ use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
 
 use crate::storage::VecStore;
 
-const H: f64 = 0.01;
+// const H: f64 = 0.01;
+const H: f64 = 1.0; // TESTING ONLY
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf
 pub fn compute_laplacian(mesh: &Mesh, f: &VecStore<f64>) -> VecStore<f64> {

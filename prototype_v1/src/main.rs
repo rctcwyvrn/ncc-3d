@@ -123,6 +123,7 @@ fn main() -> Result<()> {
     let mut l2_error_num = 0.0;
     let mut l2_error_denom = 0.0;
     let mut l_inf = 0.0;
+    let mut under = 0;
 
     for v_id in mesh.vertex_iter() {
         let pos = mesh.vertex_position(v_id);
@@ -140,6 +141,10 @@ fn main() -> Result<()> {
             if (s - val_belkin).abs() > l_inf {
                 l_inf = (s - val_belkin).abs();
             }
+        }
+
+        if s.abs() > val_belkin.abs() {
+            under += 1;
         }
 
         // if pos.x < 0.25 || pos.x > 0.75 || pos.z < 0.25 || pos.z > 0.75 { // Rectangle
@@ -182,6 +187,7 @@ fn main() -> Result<()> {
         l2_error_num.sqrt() / &l2_error_denom.sqrt(),
         l_inf,
     );
+    eprintln!("Number of underestimates = {}", &under);
     // plotting::plot_lapl_error(errors);
 
     Ok(())
