@@ -5,6 +5,9 @@ use plotting::{plot_data, GraphTy};
 use stim::{StimFn, StimTy};
 use storage::VecStore;
 use tri_mesh::{prelude::Mesh, MeshBuilder};
+use rand::prelude::*;
+
+use crate::chemistry::{STARTING_A, STARTING_B};
 
 mod chemistry;
 mod laplacian;
@@ -22,12 +25,7 @@ const FINAL_TIME: f64 = 350.0; // Testing steady_state_tol
 // At what point should we stop and assume we've reached a steady state?
 // Completely arbitrary and messy, but it's better than just having a final time and hoping that its enough
 const STEADY_STATE_TOL: f64 = 0.01;
-
 const SNAPSHOT_PERIOD: usize = 500;
-
-// Steady state pair of A,B
-const STARTING_A: f64 = 0.2683312;
-const STARTING_B: f64 = 2.0;
 
 // Diffusivity constants
 const D_A: f64 = 0.1;
@@ -47,15 +45,23 @@ fn main() -> Result<()> {
 
     let mut conc_data = VecStore::new(&mesh);
     mesh.vertex_iter().for_each(|v_id| {
+        // let data = VertexData {
+        //     conc_a: STARTING_A,
+        //     conc_b: STARTING_B,
+        // };
+
+        // TESTING: RANDOM STARTING VALUES => TEST DIFFUSION
+        let mut rng = rand::thread_rng();
         let data = VertexData {
-            conc_a: STARTING_A,
-            conc_b: STARTING_B,
+            conc_a: rng.gen_range(0.0..2.0),
+            conc_b: rng.gen_range(0.0..2.0),
         };
+
         conc_data.set(v_id, data);
     });
 
-    // let stim_fn = stim::get_stim(StimTy::Gradient);
-    let stim_fn = stim::get_stim(StimTy::Localized);
+    let stim_fn = stim::get_stim(StimTy::Gradient);
+    // let stim_fn = stim::get_stim(StimTy::Localized);
 
     plot_data(&mesh, &conc_data, GraphTy::Intermediate(0.0));
     simulate(&mesh, &mut conc_data, stim_fn);
@@ -98,8 +104,17 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
             let b = dat.conc_b;
             let r = rate_activ.get(v_id);
 
-            let d_a = D_A * lapl_a.get(v_id) + (r + stim_k * b);
-            let d_b = D_B * lapl_b.get(v_id) - (r + stim_k * b);
+            // let d_a = D_A * lapl_a.get(v_id) + (r + stim_k * b);
+            // let d_b = D_B * lapl_b.get(v_id) - (r + stim_k * b);
+            
+            // TESTING: NO REACTION, ONLY DIFFUSION + STIM
+            // let d_a = D_A * lapl_a.get(v_id) + (stim_k * b);
+            // let d_b = D_B * lapl_b.get(v_id) - (stim_k * b);
+
+            // ONLY DIFFUSION
+            let d_a = D_A * lapl_a.get(v_id);
+            let d_b = D_B * lapl_b.get(v_id);
+
 
             dat.conc_a += TS * d_a;
             dat.conc_b += TS * d_b;
@@ -125,12 +140,6 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
                 total_b += dat.conc_b;
             }
         }
-
-        if d_total < STEADY_STATE_TOL {
-            println!("!! Steady state reached: Stopping at t = {}", t);
-            return;
-        }
-
         if (i % SNAPSHOT_PERIOD) == 0 {
             plot_data(mesh, conc_data, GraphTy::Intermediate(t.round()));
 
@@ -139,6 +148,12 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
             println!("Full total = {}", total_a + total_b);
             println!("d_total = {}", d_total);
         }
+
+        if d_total < STEADY_STATE_TOL {
+            println!("!! Steady state reached: Stopping at t = {}", t);
+            return;
+        }
+
         t += TS;
     }
 

@@ -10,6 +10,7 @@ edition = "2018"
 tri-mesh = { path = "tri-mesh" }
 eyre = "0.6.5"
 plotters = "0.3.0"
+rand = "0.8.3"
 
 [profile.release]
 debug = true
