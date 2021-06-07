@@ -86,6 +86,7 @@ with open("mesh.obj", "w") as f:
     for (x,y,z) in verts:
         # add r to x to shift it over from [-r, r] to [0, 2r]
         f.write(f"v {x+r} {y} {z}\n")
+        # f.write(f"v {x} {y} {z}\n")
     
     for (a,b,c) in faces:
         f.write(f"f {a+1} {b+1} {c+1}\n")

@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, ops::Div};
 
 use eyre::Result;
 use plotting::{plot_data, GraphTy};
@@ -15,7 +15,7 @@ mod plotting;
 mod stim;
 mod storage;
 
-const TS: f64 = 0.01;
+const TS: f64 = 0.001;
 
 // const FINAL_TIME: f64 = 100.0; // Full convergence of 2D surface
 // const FINAL_TIME: f64 = 470.0; // Full convergence of icosahedron
@@ -25,7 +25,7 @@ const FINAL_TIME: f64 = 350.0; // Testing steady_state_tol
 // At what point should we stop and assume we've reached a steady state?
 // Completely arbitrary and messy, but it's better than just having a final time and hoping that its enough
 const STEADY_STATE_TOL: f64 = 0.01;
-const SNAPSHOT_PERIOD: usize = 500;
+const SNAPSHOT_PERIOD: usize = 5000;
 
 // Diffusivity constants
 const D_A: f64 = 0.1;
@@ -51,10 +51,26 @@ fn main() -> Result<()> {
         // };
 
         // TESTING: RANDOM STARTING VALUES => TEST DIFFUSION
-        let mut rng = rand::thread_rng();
+        // let mut rng = rand::thread_rng();
+        // let data = VertexData {
+        //     conc_a: rng.gen_range(0.0..2.0),
+        //     conc_b: rng.gen_range(0.0..2.0),
+        // };
+
+        // TESTING: initialize based on known function which we know we can compute the laplacian correctly for
+        let pos = mesh.vertex_position(v_id);
         let data = VertexData {
-            conc_a: rng.gen_range(0.0..2.0),
-            conc_b: rng.gen_range(0.0..2.0),
+        //     // conc_a: pos.x.exp() / 10_f64.exp(),
+        //     // conc_b: pos.x.exp() / 10_f64.exp(),
+
+        //     // conc_a: pos.x.exp(),
+        //     // conc_b: pos.x.exp(),
+
+        //     // conc_a: (pos.x - 1.0).exp(),
+        //     // conc_b: (pos.x - 1.0).exp(),
+
+            conc_a: (pos.x - 5.0).div(5.0).exp(),
+            conc_b: (pos.x - 5.0).div(5.0).exp(),
         };
 
         conc_data.set(v_id, data);
@@ -93,7 +109,8 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
         let mut total_b = 0.0;
 
         let mut d_total = 0.0; // To determine when steady state has been reached
-                               // Step each vertex
+        
+        // Step each vertex
         for v_id in mesh.vertex_iter() {
             // Compute the external stimulation
             let pos = mesh.vertex_position(v_id);
@@ -118,7 +135,6 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
 
             dat.conc_a += TS * d_a;
             dat.conc_b += TS * d_b;
-
             d_total += d_a.abs() + d_b.abs();
 
             // Debug logging
@@ -139,6 +155,12 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
                 total_a += dat.conc_a;
                 total_b += dat.conc_b;
             }
+
+            // Testing: log data before stepping
+            // dat.conc_a += TS * d_a;
+            // dat.conc_b += TS * d_b;
+            // d_total += d_a.abs() + d_b.abs();
+
         }
         if (i % SNAPSHOT_PERIOD) == 0 {
             plot_data(mesh, conc_data, GraphTy::Intermediate(t.round()));

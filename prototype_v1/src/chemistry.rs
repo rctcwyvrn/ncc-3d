@@ -4,22 +4,22 @@ use crate::{storage::VecStore, VertexData};
 
 // Taken from wave-pinning paper
 // Steady state pair of A,B
-// pub const STARTING_A: f64 = 0.2683312;
-// pub const STARTING_B: f64 = 2.0;
-// const K: f64 = 1.0;
-// const K_0: f64 = 0.067;
-// const GAMMA: f64 = 1.0;
-// const DELTA: f64 = 1.0;
-// const V: i32 = 2;
-
-// Testing: What if we have a steeper hill-dependence?
-pub const STARTING_A: f64 = 0.1394;
+pub const STARTING_A: f64 = 0.2683312;
 pub const STARTING_B: f64 = 2.0;
 const K: f64 = 1.0;
 const K_0: f64 = 0.067;
 const GAMMA: f64 = 1.0;
 const DELTA: f64 = 1.0;
-const V: i32 = 3;
+const V: i32 = 2;
+
+// Testing: What if we have a steeper hill-dependence?
+// pub const STARTING_A: f64 = 0.1394;
+// pub const STARTING_B: f64 = 2.0;
+// const K: f64 = 1.0;
+// const K_0: f64 = 0.067;
+// const GAMMA: f64 = 1.0;
+// const DELTA: f64 = 1.0;
+// const V: i32 = 3;
 
 // Shvartsmann params
 // gamma => K
