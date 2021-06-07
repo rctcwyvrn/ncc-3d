@@ -77,6 +77,7 @@ fn main() -> Result<()> {
     // };
 
     // f(x,y,z) = x^2
+    // works on the sphere of radius r because the r^2's cancel out
     // let f = |pos: Vector3<f64>| pos.x.powi(2);
     // let soln = |pos: Vector3<f64>| {
     //     let theta = (pos.x.powi(2) + pos.y.powi(2)).sqrt().atan2(pos.z);
@@ -87,6 +88,30 @@ fn main() -> Result<()> {
     // };
     
     // f(x,y,z) = e^x
+    // let f = |pos: Vector3<f64>| pos.x.exp();
+    // let soln = |pos: Vector3<f64>| {
+    //     let epsilon = 1e-8;
+    //     let theta = (pos.x.powi(2) + pos.y.powi(2)).sqrt().atan2(pos.z);
+    //     let phi = pos.y.atan2(pos.x);
+
+    //     let sin_theta = theta.sin();
+    //     let cos_theta = theta.cos();
+    //     let sin_phi = phi.sin();
+    //     let cos_phi = phi.cos();
+        
+    //     if sin_theta.abs() < epsilon {
+    //         f64::NAN
+    //     } else {
+    //         (sin_theta * cos_phi).exp() / sin_theta * 
+    //         ( 
+    //             cos_phi.powi(2) * cos_theta/2.0 * (2.0*theta).sin() + cos_phi * (2.0*theta).cos() + 
+    //             sin_phi.powi(2) * sin_theta - cos_phi
+    //         )
+    //     }
+    // };
+
+    // f(x) = e^x on the sphere of radius r
+    let r: f64 = 1.0;
     let f = |pos: Vector3<f64>| pos.x.exp();
     let soln = |pos: Vector3<f64>| {
         let epsilon = 1e-8;
@@ -101,10 +126,10 @@ fn main() -> Result<()> {
         if sin_theta.abs() < epsilon {
             f64::NAN
         } else {
-            (sin_theta * cos_phi).exp() / sin_theta * 
+            (r * sin_theta * cos_phi).exp() / (r.powi(2) * sin_theta) * 
             ( 
-                cos_phi.powi(2) * cos_theta/2.0 * (2.0*theta).sin() + cos_phi * (2.0*theta).cos() + 
-                sin_phi.powi(2) * sin_theta - cos_phi
+                r.powi(2)/2.0 * cos_phi.powi(2) * cos_theta * (2.0*theta).sin() + r * cos_phi * (2.0*theta).cos() + 
+                r.powi(2) * sin_phi.powi(2) * sin_theta - r * cos_phi
             )
         }
     };
@@ -162,7 +187,7 @@ fn main() -> Result<()> {
                 val_belkin,
                 test_data.get(v_id),
                 s,
-                (s - val_belkin).abs()
+                (s - val_belkin).abs(),
             );
 
             // errors.push((pos, (val_belkin - s))); // graph only the errors on the interior
@@ -182,12 +207,21 @@ fn main() -> Result<()> {
         }
     }
 
-    eprintln!("Num verts = {} | L2 error = {} | L infty error = {} ", 
+    let mut total = 0.0;
+    for e_id in mesh.edge_iter() {
+        total += mesh.edge_length(e_id);
+    }
+    let edge_len_avg = total / mesh.no_edges() as f64;
+
+    eprintln!("h = {} | epsilon = {} | Num verts = {} | L2 error = {} | L infty error = {} ", 
+        laplacian::H,
+        edge_len_avg,
         mesh.no_vertices(), 
         l2_error_num.sqrt() / &l2_error_denom.sqrt(),
         l_inf,
     );
-    eprintln!("Number of underestimates = {}", &under);
+
+    // eprintln!("Number of underestimates = {}", &under);
     // plotting::plot_lapl_error(errors);
 
     Ok(())
@@ -243,7 +277,7 @@ fn simulate(mesh: &Mesh, conc_data: &mut VecStore<VertexData>, stim_fn: StimFn) 
             // Finally collect all the data together and step the diff eq
             let dat = conc_data.get_mut(v_id);
             let b = dat.conc_b;
-            let r = rate_activ.get(v_id);
+            let r = 2.0;
 
             let d_a = D_A * lapl_a.get(v_id) + (r + stim_k * b);
             let d_b = D_B * lapl_b.get(v_id) - (r + stim_k * b);

@@ -6,8 +6,8 @@ pi = math.pi
 phiaa = 26.56505
 verts = [(-1,-1,-1) for _ in range(12)]
 
+r = 5
 # r = 5
-r = 1 # unit sphere
 
 phia = pi * phiaa / 180
 theb = pi * 36 / 180
@@ -80,8 +80,8 @@ def subdivide(verts, faces):
 
     return verts, faces
 
-num_subdivides = 3
-# num_subdivides = 5
+num_subdivides = 4
+# num_subdivides = 4
 for _ in range(num_subdivides):
     verts, faces = subdivide(verts, faces)
 
