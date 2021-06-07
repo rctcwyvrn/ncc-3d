@@ -51,11 +51,11 @@ fn main() -> Result<()> {
 
     // // f(x,z) = x^2
     // let f = |pos: Vector3<f64>| pos.x.powi(2);
-    // let soln = |_: Vector3<f64>| 2.0;
+    // let soln = |_: Vector3<f64>| 2.0_f64;
 
     // // f(x,z) = x^2 + z^2
     // let f = |pos: Vector3<f64>| pos.x.powi(2) + pos.z.powi(2);
-    // let soln = |_: Vector3<f64>| 4.0;
+    // let soln = |_: Vector3<f64>| 4.0_f64;
 
     // f(x,z) = e^(x+z)
     // let f = | pos: Vector3<f64> | {
@@ -86,32 +86,9 @@ fn main() -> Result<()> {
     //     2.0 * phi.cos().powi(2) * (2.0 * theta.cos().powi(2) - theta.sin().powi(2))
     //         - 2.0 * (2.0 * phi).cos()
     // };
-    
-    // f(x,y,z) = e^x
-    // let f = |pos: Vector3<f64>| pos.x.exp();
-    // let soln = |pos: Vector3<f64>| {
-    //     let epsilon = 1e-8;
-    //     let theta = (pos.x.powi(2) + pos.y.powi(2)).sqrt().atan2(pos.z);
-    //     let phi = pos.y.atan2(pos.x);
-
-    //     let sin_theta = theta.sin();
-    //     let cos_theta = theta.cos();
-    //     let sin_phi = phi.sin();
-    //     let cos_phi = phi.cos();
-        
-    //     if sin_theta.abs() < epsilon {
-    //         f64::NAN
-    //     } else {
-    //         (sin_theta * cos_phi).exp() / sin_theta * 
-    //         ( 
-    //             cos_phi.powi(2) * cos_theta/2.0 * (2.0*theta).sin() + cos_phi * (2.0*theta).cos() + 
-    //             sin_phi.powi(2) * sin_theta - cos_phi
-    //         )
-    //     }
-    // };
 
     // f(x) = e^x on the sphere of radius r
-    let r: f64 = 1.0;
+    let r: f64 = 50.0;
     let f = |pos: Vector3<f64>| pos.x.exp();
     let soln = |pos: Vector3<f64>| {
         let epsilon = 1e-8;
@@ -159,25 +136,25 @@ fn main() -> Result<()> {
 
         // eprintln!("({},{},{}), {}", pos.x, pos.y, pos.z, val_belkin - s);
 
-        if !s.is_nan() { 
-            l2_error_num += (s - val_belkin).powi(2);
-            l2_error_denom += s.powi(2);
-
-            if (s - val_belkin).abs() > l_inf {
-                l_inf = (s - val_belkin).abs();
-            }
-        }
-
-        if s.abs() > val_belkin.abs() {
-            under += 1;
-        }
-
-        // if pos.x < 0.25 || pos.x > 0.75 || pos.z < 0.25 || pos.z > 0.75 { // Rectangle
+        // if pos.x > 1.0 || pos.x < -1.0 || pos.z > 1.0 || pos.z < -1.0 { // Rectangle
         // if pos.x < 0.25 || pos.x > 0.75 || pos.z > 0.25 || pos.z < -0.25 { // Rhombus
         if false {
             // Sphere
             continue;
         } else {
+            if !s.is_nan() { 
+                l2_error_num += (s - val_belkin).powi(2);
+                l2_error_denom += s.powi(2);
+    
+                if (s - val_belkin).abs() > l_inf {
+                    l_inf = (s - val_belkin).abs();
+                }
+            }
+    
+            if s.abs() > val_belkin.abs() {
+                under += 1;
+            }
+
             println!(
                 // "A ({},{},{}) {} | {} | {} | {}",
                 "{},{},{},{},{},{},{}",

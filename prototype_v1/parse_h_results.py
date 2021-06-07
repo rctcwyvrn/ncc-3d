@@ -1,6 +1,7 @@
 lines = None
 # with open("h_test_results_auto.txt") as f:
-with open("h_test_results_finer.txt") as f:
+# with open("h_test_results_finer.txt") as f:
+with open("h_test_results_beeg.txt") as f:
     lines = f.readlines()
 
 best_for_epsilon = {}

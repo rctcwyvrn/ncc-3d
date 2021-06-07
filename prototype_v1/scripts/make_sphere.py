@@ -6,8 +6,8 @@ pi = math.pi
 phiaa = 26.56505
 verts = [(-1,-1,-1) for _ in range(12)]
 
-r = 5
-# r = 5
+r = 50
+# r = 50
 
 phia = pi * phiaa / 180
 theb = pi * 36 / 180

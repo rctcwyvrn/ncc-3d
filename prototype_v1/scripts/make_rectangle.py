@@ -2,14 +2,14 @@ import math
 import random
 
 # L = 1
-L = 0.1
-# L = 0.5
+# L = 0.1
+L = 0.6
 # L = 0.25
 # L = 0.01
 # L = 0.005 # causes the belkin code to explode and die
 
-height = 1
-length = 1
+height = 10
+length = 10
 
 faces = []
 positions = []
@@ -73,17 +73,19 @@ print(f"Num verts = {len(positions)}")
 
 with open("mesh.obj", "w") as f:
     for (x,y,z) in positions:
-        f.write(f"v {x} {y} {z}\n")
+        # f.write(f"v {x} {y} {z}\n")
+        # shift to be centered about the origin
+        f.write(f"v {x - length/2} {y} {z - height/2}\n")
     
     for (a,b,c) in faces:
         f.write(f"f {a+1} {b+1} {c+1}\n")
 
 
-with open("mesh.off", "w") as f:
-    f.write("OFF\n")
-    f.write(f"{len(positions)} {len(faces)} 0\n")
-    for (x,y,z) in positions:
-        f.write(f" {x} {y} {z}\n")
+# with open("mesh.off", "w") as f:
+#     f.write("OFF\n")
+#     f.write(f"{len(positions)} {len(faces)} 0\n")
+#     for (x,y,z) in positions:
+#         f.write(f" {x} {y} {z}\n")
     
-    for (a,b,c) in faces:
-        f.write(f"3 {a} {b} {c}\n")
+#     for (a,b,c) in faces:
+#         f.write(f"3 {a} {b} {c}\n")
