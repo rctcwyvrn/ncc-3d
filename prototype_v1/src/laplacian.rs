@@ -2,7 +2,7 @@ use tri_mesh::prelude::{InnerSpace, Mesh, VertexID};
 
 use crate::storage::VecStore;
 
-const H: f64 = 0.11;
+const H: f64 = 0.006;
 // const H: f64 = 1.0;
 
 // http://www.cs.jhu.edu/~misha/Fall09/Belkin08.pdf

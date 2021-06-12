@@ -1,19 +1,19 @@
 import math
 
 # L = 1
-L = 0.5
+L = 0.05
 # L = 0.25
 # L = 0.1
 
-height = 4
-length = 10
+height = 5
+length = 3
 
 faces = []
 positions = []
 
 z_range = int(height // L) + 1
 # z_range = 2
-x_range = int(length // L) + 1
+x_range = int(length // L) + 2
 print(x_range, z_range)
 
 i = 0
@@ -53,8 +53,14 @@ for z in range(z_range-1):
 
 print(f"Num verts = {len(positions)}")
 
+
 with open("mesh.obj", "w") as f:
     for (x,y,z) in positions:
+        # f.write(f"v {x} {y} {z}\n")
+        # shift to be centered about the origin
+        # f.write(f"v {x - length/2} {y} {z - height/2}\n")
+
+        x,y,z = round(x-1,6), round(y,6), round(z-2,6)
         f.write(f"v {x} {y} {z}\n")
     
     for (a,b,c) in faces:

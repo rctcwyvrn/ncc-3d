@@ -12,6 +12,7 @@ const MAX_VAL: f64 = 2.0;
 pub enum GraphTy {
     Intermediate(f64),
     Final,
+    Initial,
 }
 
 pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
@@ -19,21 +20,25 @@ pub fn plot_data(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     let title_active = match ty {
         GraphTy::Intermediate(ts) => format!("Active conc. at t = {}", ts),
         GraphTy::Final => format!("Final active conc."),
+        GraphTy::Initial => format!("Initial active conc."),
     };
 
     let path_active = match ty {
-        GraphTy::Intermediate(ts) => format!("images/active-{:0>4}.png", ts),
+        GraphTy::Intermediate(ts) => format!("images/active-{:0>5}.png", ts),
         GraphTy::Final => format!("images/active-final.png"),
+        GraphTy::Initial => format!("images/active-initial.png"),
     };
 
     let title_inactive = match ty {
         GraphTy::Intermediate(ts) => format!("Inactive conc. at t = {}", ts),
         GraphTy::Final => format!("Final Inactive conc."),
+        GraphTy::Initial => format!("Initial Inactive conc."),
     };
 
     let path_inactive = match ty {
         GraphTy::Intermediate(ts) => format!("images/inactive-{:0>4}.png", ts),
         GraphTy::Final => format!("images/inactive-final.png"),
+        GraphTy::Initial => format!("images/inactive-initial.png"),
     };
     do_plot(
         mesh,
@@ -80,7 +85,7 @@ fn get_color(val: f64) -> RGBColor {
         let c = (rel_percent * 255.0) as u8;
         RGBColor(0, 255 - c, 255)
     } else {
-        eprintln!("Warning: Got a concentration > 2.0: {}", val);
+        // eprintln!("Warning: Got a concentration > 2.0: {}", val); // FOR TESTING HEAT DIFFUSION ONLY
         RGBColor(255, 0, 255)
     }
 }
@@ -108,7 +113,8 @@ fn do_plot(
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
         .caption(title, ("sans-serif", 40))
-        .build_cartesian_3d(0.0..MAX_X, -5.5..5.5, -5.5..5.5)
+        // .build_cartesian_3d(0.0..MAX_X, -5.5..5.5, -5.5..5.5)
+        .build_cartesian_3d(-1.5..1.5, -2.0..2.0, -3.5..3.5)
         .unwrap();
 
     // DEBUG: Top down look
@@ -180,6 +186,12 @@ fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
             "images/inactive-slice-final-0.png".to_string(),
             "images/inactive-slice-final-1.png".to_string(),
         ),
+        GraphTy::Initial => (
+            "images/active-slice-initial-0.png".to_string(),
+            "images/active-slice-initial-1.png".to_string(),
+            "images/inactive-slice-initial-0.png".to_string(),
+            "images/inactive-slice-initial-1.png".to_string(),
+        ),
         GraphTy::Intermediate(ts) => (
             format!("images/active-slice-{:0>4}-0.png", ts),
             format!("images/active-slice-{:0>4}-1.png", ts),
@@ -189,33 +201,33 @@ fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     };
 
     // For planar mesh
-    // let bound_0 = 0.0;
-    // let bound_1 = 2.0;
-    // let data: Vec<_> = mesh
-    //     .vertex_iter()
-    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-    //     .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
-    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
-    //     .collect();
+    let bound_0 = 0.0;
+    let bound_1 = 2.0;
+    let data: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| (pos.z - bound_0).abs() <= 0.0001)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+        .collect();
 
-    // let caption = format!(
-    //     "profile of active protein on planar mesh with z={}",
-    //     bound_0
-    // );
-    // do_slice_plot(data, &path_1, &caption);
+    let caption = format!(
+        "profile of active protein on planar mesh with z={}",
+        bound_0
+    );
+    do_slice_plot(data, &path_1, &caption);
 
-    // let data: Vec<_> = mesh
-    //     .vertex_iter()
-    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-    //     .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
-    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
-    //     .collect();
+    let data: Vec<_> = mesh
+        .vertex_iter()
+        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+        .filter(|(_, pos)| (pos.z - bound_1).abs() <= 0.0001)
+        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+        .collect();
 
-    // let caption = format!(
-    //     "profile of active protein on planar mesh with z={}",
-    //     bound_1
-    // );
-    // do_slice_plot(data, &path_2, &caption);
+    let caption = format!(
+        "profile of active protein on planar mesh with z={}",
+        bound_1
+    );
+    do_slice_plot(data, &path_2, &caption);
 
     // let data: Vec<_> = mesh
     //     .vertex_iter()
@@ -244,24 +256,24 @@ fn plot_slice(mesh: &Mesh, conc_data: &VecStore<VertexData>, ty: GraphTy) {
     // do_slice_plot(data, &path_4, &caption);
 
     // For sphere
-    let data_1: Vec<_> = mesh
-        .vertex_iter()
-        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| pos.y.abs() <= 0.0001)
-        .filter(|(_, pos)| pos.z >= 0.0)
-        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
-        .collect();
+    // let data_1: Vec<_> = mesh
+    //     .vertex_iter()
+    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+    //     .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+    //     .filter(|(_, pos)| pos.z >= 0.0)
+    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+    //     .collect();
 
-    let data_2: Vec<_> = mesh
-        .vertex_iter()
-        .map(|v_id| (v_id, mesh.vertex_position(v_id)))
-        .filter(|(_, pos)| pos.y.abs() <= 0.0001)
-        .filter(|(_, pos)| pos.z < 0.0)
-        .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
-        .collect();
+    // let data_2: Vec<_> = mesh
+    //     .vertex_iter()
+    //     .map(|v_id| (v_id, mesh.vertex_position(v_id)))
+    //     .filter(|(_, pos)| pos.y.abs() <= 0.0001)
+    //     .filter(|(_, pos)| pos.z < 0.0)
+    //     .map(|(v_id, pos)| (pos.x, conc_data.get(v_id).conc_a))
+    //     .collect();
 
-    do_slice_plot(data_1, &path_1, "slice of sphere with y = 0, z>=0");
-    do_slice_plot(data_2, &path_2, "slice of sphere with y = 0, z<0");
+    // do_slice_plot(data_1, &path_1, "slice of sphere with y = 0, z>=0");
+    // do_slice_plot(data_2, &path_2, "slice of sphere with y = 0, z<0");
 }
 
 fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {
@@ -275,7 +287,8 @@ fn do_slice_plot(mut data: Vec<(f64, f64)>, path: &str, caption: &str) {
         .caption(caption, ("sans-serif", 10))
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(0.0..MAX_X, 0.0..MAX_VAL)
+        // .build_cartesian_2d(0.0..MAX_X, 0.0..MAX_VAL)
+        .build_cartesian_2d(-1.5..2.5, 0.0..15.0)
         .unwrap();
 
     chart
